@@ -1,0 +1,12 @@
+---
+name: unit tests
+discover: find tests/unit -type f \( -name '*.test.ts' -o -name '*.test.tsx' \) -print | sort
+run: mkdir -p test-results/circleci/unit && npx vitest run --coverage --reporter=junit --outputFile="<< outputs.junit >>" << test.atoms >>
+outputs:
+  junit: test-results/circleci/unit/junit.xml
+---
+name: browser acceptance tests
+discover: find tests/e2e -type f \( -name '*.spec.ts' -o -name '*.spec.tsx' \) -print | sort
+run: mkdir -p test-results/circleci/browser && PLAYWRIGHT_JUNIT_OUTPUT_FILE="<< outputs.junit >>" npx playwright test --reporter=junit << test.atoms >> && node --input-type=module -e 'import { readFileSync, writeFileSync } from "node:fs"; const path = "<< outputs.junit >>"; const report = readFileSync(path, "utf8"); writeFileSync(path, report.replaceAll("<testcase ", "<testcase file=\"tests/e2e/dashboard.spec.ts\" "));'
+outputs:
+  junit: test-results/circleci/browser/junit.xml
