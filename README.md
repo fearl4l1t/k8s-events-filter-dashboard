@@ -318,7 +318,9 @@ The domain modules for normalization, timestamp handling, filtering, sorting, pa
 
 ### Performance
 
-The responsiveness target is **250 ms or less** for a namespace/type filter change, keyword search and bounded time-range change against the deterministic 2,500-record benchmark, measured on the named development machine. The benchmark reports the median, minimum and maximum across at least 10 samples. **Measured result: pending the first completed benchmark run.** Record the machine, operating system and measured medians here after the benchmark passes; do not present this target as an already measured result.
+The responsiveness target is **250 ms or less** for a namespace/type filter change, keyword search and bounded time-range change against the deterministic 2,500-record benchmark. The benchmark reports the median, minimum and maximum across 10 measured samples after warmup.
+
+Measured on 14 November 2026 on macOS 27.0 (darwin arm64), Node.js v24.21.0: namespace/type filter **0.053 ms** median, keyword search **0.216 ms** median, and bounded 1-hour time filter **0.711 ms** median. These measurements cover pure domain operations, not browser rendering. Results are recorded in `bench/results.json`.
 
 The build also enforces a hard limit of **500 KiB gzip** for the initial JavaScript dependency graph. This is checked by the project's manifest-based bundle-size script, not by Vite's default uncompressed chunk warning.
 

@@ -1,0 +1,2916 @@
+{
+  "scenarioId": "core-v1-compat",
+  "name": "Core v1 Compatibility",
+  "description": "Compatibility fixture using legacy core/v1 event schema",
+  "seedEvents": [
+    {
+      "apiVersion": "v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "core-compat-nginx.1",
+        "namespace": "ingress-nginx",
+        "uid": "uid-core-compat-001",
+        "creationTimestamp": "2026-11-14T11:53:20.000Z"
+      },
+      "involvedObject": {
+        "apiVersion": "v1",
+        "kind": "Pod",
+        "name": "ingress-nginx-controller-v1",
+        "namespace": "ingress-nginx",
+        "uid": "obj-nginx-compat"
+      },
+      "reason": "RELOAD",
+      "message": "NGINX configuration reload successful",
+      "type": "Normal",
+      "source": {
+        "component": "nginx-ingress-controller"
+      },
+      "firstTimestamp": "2026-11-14T11:53:20.000Z",
+      "lastTimestamp": "2026-11-14T11:53:20.000Z",
+      "count": 1
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "edge-missing-optional.core-v1-compat",
+        "namespace": "default",
+        "uid": "uid-core-v1-compat-edge-missing",
+        "creationTimestamp": "2026-11-14T10:01:40.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Pod",
+        "name": "pod-with-missing-fields",
+        "namespace": "default",
+        "uid": "obj-pod-missing"
+      },
+      "reason": "MissingFieldsEvent",
+      "note": null,
+      "type": "Normal",
+      "reportingController": null,
+      "eventTime": "2026-11-14T10:01:40.000Z"
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "edge-fallback-creation.core-v1-compat",
+        "namespace": "kube-system",
+        "uid": "uid-core-v1-compat-edge-fallback",
+        "creationTimestamp": "2026-11-14T10:03:20.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Node",
+        "name": "node-worker-fallback",
+        "namespace": null,
+        "uid": "obj-node-fallback"
+      },
+      "reason": "NodeSynced",
+      "note": "Node state synced using creation fallback timestamp",
+      "type": "Normal",
+      "reportingController": "k8s.io/kubelet",
+      "eventTime": null
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "edge-invalid-ts.core-v1-compat",
+        "namespace": "database",
+        "uid": "uid-core-v1-compat-edge-invalid-ts",
+        "creationTimestamp": "INVALID_TIMESTAMP_STRING"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Pod",
+        "name": "db-replica-invalid-ts",
+        "namespace": "database",
+        "uid": "obj-db-invalid-ts"
+      },
+      "reason": "CorruptTimestamp",
+      "note": "Simulated corrupt timestamp for boundary testing",
+      "type": "Warning",
+      "reportingController": "k8s.io/custom-controller",
+      "eventTime": "2026-99-99T99:99:99Z"
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "edge-malformed-count.core-v1-compat",
+        "namespace": "monitoring",
+        "uid": "uid-core-v1-compat-edge-malformed-count",
+        "creationTimestamp": "2026-11-14T10:05:00.000Z"
+      },
+      "involvedObject": {
+        "apiVersion": "v1",
+        "kind": "Pod",
+        "name": "prometheus-collector-edge",
+        "namespace": "monitoring",
+        "uid": "obj-prom-edge"
+      },
+      "reason": "MetricsCollectionWarning",
+      "message": "Scrape failed with negative count test",
+      "type": "Warning",
+      "source": {
+        "component": "prometheus"
+      },
+      "firstTimestamp": "2026-11-14T10:05:00.000Z",
+      "lastTimestamp": "2026-11-14T10:05:00.000Z",
+      "count": -5
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "pod-core-v1-compat-1.1000",
+        "namespace": "default",
+        "uid": "uid-core-v1-compat-routine-0001",
+        "creationTimestamp": "2026-11-14T10:00:00.000Z"
+      },
+      "involvedObject": {
+        "apiVersion": "v1",
+        "kind": "Pod",
+        "name": "pod-core-v1-compat-1",
+        "namespace": "default",
+        "uid": "obj-uid-core-v1-compat-routine-0001"
+      },
+      "reason": "Scheduled",
+      "message": "Successfully assigned pod to node-worker-1",
+      "source": {
+        "component": "kubelet"
+      },
+      "firstTimestamp": "2026-11-14T10:00:00.000Z",
+      "lastTimestamp": "2026-11-14T10:00:00.000Z",
+      "count": 1,
+      "type": "Normal",
+      "eventTime": null
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "deployment-core-v1-compat-2.1001",
+        "namespace": "kube-system",
+        "uid": "uid-core-v1-compat-routine-0002",
+        "creationTimestamp": "2026-11-14T10:00:20.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Deployment",
+        "name": "deployment-core-v1-compat-2",
+        "namespace": "kube-system",
+        "uid": "obj-uid-core-v1-compat-routine-0002"
+      },
+      "reason": "Pulling",
+      "note": "Pulling image \"registry.k8s.io/pause:3.9\"",
+      "type": "Normal",
+      "reportingController": "k8s.io/kube-scheduler",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:00:20.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:00:20.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "replicaset-core-v1-compat-3.1002",
+        "namespace": "monitoring",
+        "uid": "uid-core-v1-compat-routine-0003",
+        "creationTimestamp": "2026-11-14T10:00:40.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "ReplicaSet",
+        "name": "replicaset-core-v1-compat-3",
+        "namespace": "monitoring",
+        "uid": "obj-uid-core-v1-compat-routine-0003"
+      },
+      "reason": "Pulled",
+      "note": "Successfully pulled image in 1.42s",
+      "type": "Normal",
+      "reportingController": "k8s.io/kubelet",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:00:40.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:00:40.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "service-core-v1-compat-4.1003",
+        "namespace": "payments",
+        "uid": "uid-core-v1-compat-routine-0004",
+        "creationTimestamp": "2026-11-14T10:01:00.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Service",
+        "name": "service-core-v1-compat-4",
+        "namespace": "payments",
+        "uid": "obj-uid-core-v1-compat-routine-0004"
+      },
+      "reason": "Created",
+      "note": "Created container pause",
+      "type": "Normal",
+      "reportingController": "k8s.io/kube-scheduler",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:01:00.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:01:00.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "node-core-v1-compat-5.1004",
+        "namespace": "ingress-nginx",
+        "uid": "uid-core-v1-compat-routine-0005",
+        "creationTimestamp": "2026-11-14T10:01:20.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Node",
+        "name": "node-core-v1-compat-5",
+        "namespace": "ingress-nginx",
+        "uid": "obj-uid-core-v1-compat-routine-0005"
+      },
+      "reason": "Started",
+      "note": "Started container pause",
+      "type": "Normal",
+      "reportingController": "k8s.io/kubelet",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:01:20.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:01:20.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "persistentvolumeclaim-core-v1-compat-6.1005",
+        "namespace": "database",
+        "uid": "uid-core-v1-compat-routine-0006",
+        "creationTimestamp": "2026-11-14T10:01:40.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "PersistentVolumeClaim",
+        "name": "persistentvolumeclaim-core-v1-compat-6",
+        "namespace": "database",
+        "uid": "obj-uid-core-v1-compat-routine-0006"
+      },
+      "reason": "SuccessfulCreate",
+      "note": "Created pod: worker-rs-992",
+      "type": "Normal",
+      "reportingController": "k8s.io/kube-scheduler",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:01:40.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:01:40.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "pod-core-v1-compat-7.1006",
+        "namespace": "default",
+        "uid": "uid-core-v1-compat-routine-0007",
+        "creationTimestamp": "2026-11-14T10:02:00.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Pod",
+        "name": "pod-core-v1-compat-7",
+        "namespace": "default",
+        "uid": "obj-uid-core-v1-compat-routine-0007"
+      },
+      "reason": "ScalingReplicaSet",
+      "note": "Scaled up replica set frontend-6f97d5",
+      "type": "Normal",
+      "reportingController": "k8s.io/kubelet",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:02:00.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:02:00.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "deployment-core-v1-compat-8.1007",
+        "namespace": "kube-system",
+        "uid": "uid-core-v1-compat-routine-0008",
+        "creationTimestamp": "2026-11-14T10:02:20.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Deployment",
+        "name": "deployment-core-v1-compat-8",
+        "namespace": "kube-system",
+        "uid": "obj-uid-core-v1-compat-routine-0008"
+      },
+      "reason": "NodeReady",
+      "note": "Node node-worker-2 status is now: NodeReady",
+      "type": "Normal",
+      "reportingController": "k8s.io/kube-scheduler",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:02:20.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:02:20.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "replicaset-core-v1-compat-9.1008",
+        "namespace": "monitoring",
+        "uid": "uid-core-v1-compat-routine-0009",
+        "creationTimestamp": "2026-11-14T10:02:40.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "ReplicaSet",
+        "name": "replicaset-core-v1-compat-9",
+        "namespace": "monitoring",
+        "uid": "obj-uid-core-v1-compat-routine-0009"
+      },
+      "reason": "ProbeWarning",
+      "note": "Readiness probe returned HTTP 503",
+      "type": "Warning",
+      "reportingController": "k8s.io/kubelet",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:02:40.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:02:40.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "service-core-v1-compat-10.1009",
+        "namespace": "payments",
+        "uid": "uid-core-v1-compat-routine-0010",
+        "creationTimestamp": "2026-11-14T10:03:00.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Service",
+        "name": "service-core-v1-compat-10",
+        "namespace": "payments",
+        "uid": "obj-uid-core-v1-compat-routine-0010"
+      },
+      "reason": "Unhealthy",
+      "note": "Liveness probe failed: connection refused",
+      "type": "Warning",
+      "reportingController": "k8s.io/kube-scheduler",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:03:00.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:03:00.000Z"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "node-core-v1-compat-11.1010",
+        "namespace": "ingress-nginx",
+        "uid": "uid-core-v1-compat-routine-0011",
+        "creationTimestamp": "2026-11-14T10:03:20.000Z"
+      },
+      "involvedObject": {
+        "apiVersion": "v1",
+        "kind": "Node",
+        "name": "node-core-v1-compat-11",
+        "namespace": "ingress-nginx",
+        "uid": "obj-uid-core-v1-compat-routine-0011"
+      },
+      "reason": "Scheduled",
+      "message": "Successfully assigned pod to node-worker-1",
+      "source": {
+        "component": "kubelet"
+      },
+      "firstTimestamp": "2026-11-14T10:03:20.000Z",
+      "lastTimestamp": "2026-11-14T10:03:20.000Z",
+      "count": 1,
+      "type": "Normal",
+      "eventTime": null
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "persistentvolumeclaim-core-v1-compat-12.1011",
+        "namespace": "database",
+        "uid": "uid-core-v1-compat-routine-0012",
+        "creationTimestamp": "2026-11-14T10:03:40.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "PersistentVolumeClaim",
+        "name": "persistentvolumeclaim-core-v1-compat-12",
+        "namespace": "database",
+        "uid": "obj-uid-core-v1-compat-routine-0012"
+      },
+      "reason": "Pulling",
+      "note": "Pulling image \"registry.k8s.io/pause:3.9\"",
+      "type": "Normal",
+      "reportingController": "k8s.io/kube-scheduler",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:03:40.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:03:40.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "pod-core-v1-compat-13.1012",
+        "namespace": "default",
+        "uid": "uid-core-v1-compat-routine-0013",
+        "creationTimestamp": "2026-11-14T10:04:00.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Pod",
+        "name": "pod-core-v1-compat-13",
+        "namespace": "default",
+        "uid": "obj-uid-core-v1-compat-routine-0013"
+      },
+      "reason": "Pulled",
+      "note": "Successfully pulled image in 1.42s",
+      "type": "Normal",
+      "reportingController": "k8s.io/kubelet",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:04:00.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:04:00.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "deployment-core-v1-compat-14.1013",
+        "namespace": "kube-system",
+        "uid": "uid-core-v1-compat-routine-0014",
+        "creationTimestamp": "2026-11-14T10:04:20.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Deployment",
+        "name": "deployment-core-v1-compat-14",
+        "namespace": "kube-system",
+        "uid": "obj-uid-core-v1-compat-routine-0014"
+      },
+      "reason": "Created",
+      "note": "Created container pause",
+      "type": "Normal",
+      "reportingController": "k8s.io/kube-scheduler",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:04:20.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:04:20.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "replicaset-core-v1-compat-15.1014",
+        "namespace": "monitoring",
+        "uid": "uid-core-v1-compat-routine-0015",
+        "creationTimestamp": "2026-11-14T10:04:40.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "ReplicaSet",
+        "name": "replicaset-core-v1-compat-15",
+        "namespace": "monitoring",
+        "uid": "obj-uid-core-v1-compat-routine-0015"
+      },
+      "reason": "Started",
+      "note": "Started container pause",
+      "type": "Normal",
+      "reportingController": "k8s.io/kubelet",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:04:40.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:04:40.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "service-core-v1-compat-1.1015",
+        "namespace": "payments",
+        "uid": "uid-core-v1-compat-routine-0016",
+        "creationTimestamp": "2026-11-14T10:05:00.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Service",
+        "name": "service-core-v1-compat-1",
+        "namespace": "payments",
+        "uid": "obj-uid-core-v1-compat-routine-0016"
+      },
+      "reason": "SuccessfulCreate",
+      "note": "Created pod: worker-rs-992",
+      "type": "Normal",
+      "reportingController": "k8s.io/kube-scheduler",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:05:00.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:05:00.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "node-core-v1-compat-2.1016",
+        "namespace": "ingress-nginx",
+        "uid": "uid-core-v1-compat-routine-0017",
+        "creationTimestamp": "2026-11-14T10:05:20.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Node",
+        "name": "node-core-v1-compat-2",
+        "namespace": "ingress-nginx",
+        "uid": "obj-uid-core-v1-compat-routine-0017"
+      },
+      "reason": "ScalingReplicaSet",
+      "note": "Scaled up replica set frontend-6f97d5",
+      "type": "Normal",
+      "reportingController": "k8s.io/kubelet",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:05:20.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:05:20.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "persistentvolumeclaim-core-v1-compat-3.1017",
+        "namespace": "database",
+        "uid": "uid-core-v1-compat-routine-0018",
+        "creationTimestamp": "2026-11-14T10:05:40.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "PersistentVolumeClaim",
+        "name": "persistentvolumeclaim-core-v1-compat-3",
+        "namespace": "database",
+        "uid": "obj-uid-core-v1-compat-routine-0018"
+      },
+      "reason": "NodeReady",
+      "note": "Node node-worker-2 status is now: NodeReady",
+      "type": "Normal",
+      "reportingController": "k8s.io/kube-scheduler",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:05:40.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:05:40.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "pod-core-v1-compat-4.1018",
+        "namespace": "default",
+        "uid": "uid-core-v1-compat-routine-0019",
+        "creationTimestamp": "2026-11-14T10:06:00.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Pod",
+        "name": "pod-core-v1-compat-4",
+        "namespace": "default",
+        "uid": "obj-uid-core-v1-compat-routine-0019"
+      },
+      "reason": "ProbeWarning",
+      "note": "Readiness probe returned HTTP 503",
+      "type": "Warning",
+      "reportingController": "k8s.io/kubelet",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:06:00.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:06:00.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "deployment-core-v1-compat-5.1019",
+        "namespace": "kube-system",
+        "uid": "uid-core-v1-compat-routine-0020",
+        "creationTimestamp": "2026-11-14T10:06:20.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Deployment",
+        "name": "deployment-core-v1-compat-5",
+        "namespace": "kube-system",
+        "uid": "obj-uid-core-v1-compat-routine-0020"
+      },
+      "reason": "Unhealthy",
+      "note": "Liveness probe failed: connection refused",
+      "type": "Warning",
+      "reportingController": "k8s.io/kube-scheduler",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:06:20.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:06:20.000Z"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "replicaset-core-v1-compat-6.1020",
+        "namespace": "monitoring",
+        "uid": "uid-core-v1-compat-routine-0021",
+        "creationTimestamp": "2026-11-14T10:06:40.000Z"
+      },
+      "involvedObject": {
+        "apiVersion": "v1",
+        "kind": "ReplicaSet",
+        "name": "replicaset-core-v1-compat-6",
+        "namespace": "monitoring",
+        "uid": "obj-uid-core-v1-compat-routine-0021"
+      },
+      "reason": "Scheduled",
+      "message": "Successfully assigned pod to node-worker-1",
+      "source": {
+        "component": "kubelet"
+      },
+      "firstTimestamp": "2026-11-14T10:06:40.000Z",
+      "lastTimestamp": "2026-11-14T10:06:40.000Z",
+      "count": 1,
+      "type": "Normal",
+      "eventTime": null
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "service-core-v1-compat-7.1021",
+        "namespace": "payments",
+        "uid": "uid-core-v1-compat-routine-0022",
+        "creationTimestamp": "2026-11-14T10:07:00.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Service",
+        "name": "service-core-v1-compat-7",
+        "namespace": "payments",
+        "uid": "obj-uid-core-v1-compat-routine-0022"
+      },
+      "reason": "Pulling",
+      "note": "Pulling image \"registry.k8s.io/pause:3.9\"",
+      "type": "Normal",
+      "reportingController": "k8s.io/kube-scheduler",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:07:00.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:07:00.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "node-core-v1-compat-8.1022",
+        "namespace": "ingress-nginx",
+        "uid": "uid-core-v1-compat-routine-0023",
+        "creationTimestamp": "2026-11-14T10:07:20.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Node",
+        "name": "node-core-v1-compat-8",
+        "namespace": "ingress-nginx",
+        "uid": "obj-uid-core-v1-compat-routine-0023"
+      },
+      "reason": "Pulled",
+      "note": "Successfully pulled image in 1.42s",
+      "type": "Normal",
+      "reportingController": "k8s.io/kubelet",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:07:20.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:07:20.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "persistentvolumeclaim-core-v1-compat-9.1023",
+        "namespace": "database",
+        "uid": "uid-core-v1-compat-routine-0024",
+        "creationTimestamp": "2026-11-14T10:07:40.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "PersistentVolumeClaim",
+        "name": "persistentvolumeclaim-core-v1-compat-9",
+        "namespace": "database",
+        "uid": "obj-uid-core-v1-compat-routine-0024"
+      },
+      "reason": "Created",
+      "note": "Created container pause",
+      "type": "Normal",
+      "reportingController": "k8s.io/kube-scheduler",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:07:40.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:07:40.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "pod-core-v1-compat-10.1024",
+        "namespace": "default",
+        "uid": "uid-core-v1-compat-routine-0025",
+        "creationTimestamp": "2026-11-14T10:08:00.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Pod",
+        "name": "pod-core-v1-compat-10",
+        "namespace": "default",
+        "uid": "obj-uid-core-v1-compat-routine-0025"
+      },
+      "reason": "Started",
+      "note": "Started container pause",
+      "type": "Normal",
+      "reportingController": "k8s.io/kubelet",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:08:00.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:08:00.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "deployment-core-v1-compat-11.1025",
+        "namespace": "kube-system",
+        "uid": "uid-core-v1-compat-routine-0026",
+        "creationTimestamp": "2026-11-14T10:08:20.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Deployment",
+        "name": "deployment-core-v1-compat-11",
+        "namespace": "kube-system",
+        "uid": "obj-uid-core-v1-compat-routine-0026"
+      },
+      "reason": "SuccessfulCreate",
+      "note": "Created pod: worker-rs-992",
+      "type": "Normal",
+      "reportingController": "k8s.io/kube-scheduler",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:08:20.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:08:20.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "replicaset-core-v1-compat-12.1026",
+        "namespace": "monitoring",
+        "uid": "uid-core-v1-compat-routine-0027",
+        "creationTimestamp": "2026-11-14T10:08:40.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "ReplicaSet",
+        "name": "replicaset-core-v1-compat-12",
+        "namespace": "monitoring",
+        "uid": "obj-uid-core-v1-compat-routine-0027"
+      },
+      "reason": "ScalingReplicaSet",
+      "note": "Scaled up replica set frontend-6f97d5",
+      "type": "Normal",
+      "reportingController": "k8s.io/kubelet",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:08:40.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:08:40.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "service-core-v1-compat-13.1027",
+        "namespace": "payments",
+        "uid": "uid-core-v1-compat-routine-0028",
+        "creationTimestamp": "2026-11-14T10:09:00.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Service",
+        "name": "service-core-v1-compat-13",
+        "namespace": "payments",
+        "uid": "obj-uid-core-v1-compat-routine-0028"
+      },
+      "reason": "NodeReady",
+      "note": "Node node-worker-2 status is now: NodeReady",
+      "type": "Normal",
+      "reportingController": "k8s.io/kube-scheduler",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:09:00.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:09:00.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "node-core-v1-compat-14.1028",
+        "namespace": "ingress-nginx",
+        "uid": "uid-core-v1-compat-routine-0029",
+        "creationTimestamp": "2026-11-14T10:09:20.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Node",
+        "name": "node-core-v1-compat-14",
+        "namespace": "ingress-nginx",
+        "uid": "obj-uid-core-v1-compat-routine-0029"
+      },
+      "reason": "ProbeWarning",
+      "note": "Readiness probe returned HTTP 503",
+      "type": "Warning",
+      "reportingController": "k8s.io/kubelet",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:09:20.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:09:20.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "persistentvolumeclaim-core-v1-compat-15.1029",
+        "namespace": "database",
+        "uid": "uid-core-v1-compat-routine-0030",
+        "creationTimestamp": "2026-11-14T10:09:40.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "PersistentVolumeClaim",
+        "name": "persistentvolumeclaim-core-v1-compat-15",
+        "namespace": "database",
+        "uid": "obj-uid-core-v1-compat-routine-0030"
+      },
+      "reason": "Unhealthy",
+      "note": "Liveness probe failed: connection refused",
+      "type": "Warning",
+      "reportingController": "k8s.io/kube-scheduler",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:09:40.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:09:40.000Z"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "pod-core-v1-compat-1.1030",
+        "namespace": "default",
+        "uid": "uid-core-v1-compat-routine-0031",
+        "creationTimestamp": "2026-11-14T10:10:00.000Z"
+      },
+      "involvedObject": {
+        "apiVersion": "v1",
+        "kind": "Pod",
+        "name": "pod-core-v1-compat-1",
+        "namespace": "default",
+        "uid": "obj-uid-core-v1-compat-routine-0031"
+      },
+      "reason": "Scheduled",
+      "message": "Successfully assigned pod to node-worker-1",
+      "source": {
+        "component": "kubelet"
+      },
+      "firstTimestamp": "2026-11-14T10:10:00.000Z",
+      "lastTimestamp": "2026-11-14T10:10:00.000Z",
+      "count": 1,
+      "type": "Normal",
+      "eventTime": null
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "deployment-core-v1-compat-2.1031",
+        "namespace": "kube-system",
+        "uid": "uid-core-v1-compat-routine-0032",
+        "creationTimestamp": "2026-11-14T10:10:20.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Deployment",
+        "name": "deployment-core-v1-compat-2",
+        "namespace": "kube-system",
+        "uid": "obj-uid-core-v1-compat-routine-0032"
+      },
+      "reason": "Pulling",
+      "note": "Pulling image \"registry.k8s.io/pause:3.9\"",
+      "type": "Normal",
+      "reportingController": "k8s.io/kube-scheduler",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:10:20.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:10:20.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "replicaset-core-v1-compat-3.1032",
+        "namespace": "monitoring",
+        "uid": "uid-core-v1-compat-routine-0033",
+        "creationTimestamp": "2026-11-14T10:10:40.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "ReplicaSet",
+        "name": "replicaset-core-v1-compat-3",
+        "namespace": "monitoring",
+        "uid": "obj-uid-core-v1-compat-routine-0033"
+      },
+      "reason": "Pulled",
+      "note": "Successfully pulled image in 1.42s",
+      "type": "Normal",
+      "reportingController": "k8s.io/kubelet",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:10:40.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:10:40.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "service-core-v1-compat-4.1033",
+        "namespace": "payments",
+        "uid": "uid-core-v1-compat-routine-0034",
+        "creationTimestamp": "2026-11-14T10:11:00.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Service",
+        "name": "service-core-v1-compat-4",
+        "namespace": "payments",
+        "uid": "obj-uid-core-v1-compat-routine-0034"
+      },
+      "reason": "Created",
+      "note": "Created container pause",
+      "type": "Normal",
+      "reportingController": "k8s.io/kube-scheduler",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:11:00.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:11:00.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "node-core-v1-compat-5.1034",
+        "namespace": "ingress-nginx",
+        "uid": "uid-core-v1-compat-routine-0035",
+        "creationTimestamp": "2026-11-14T10:11:20.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Node",
+        "name": "node-core-v1-compat-5",
+        "namespace": "ingress-nginx",
+        "uid": "obj-uid-core-v1-compat-routine-0035"
+      },
+      "reason": "Started",
+      "note": "Started container pause",
+      "type": "Normal",
+      "reportingController": "k8s.io/kubelet",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:11:20.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:11:20.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "persistentvolumeclaim-core-v1-compat-6.1035",
+        "namespace": "database",
+        "uid": "uid-core-v1-compat-routine-0036",
+        "creationTimestamp": "2026-11-14T10:11:40.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "PersistentVolumeClaim",
+        "name": "persistentvolumeclaim-core-v1-compat-6",
+        "namespace": "database",
+        "uid": "obj-uid-core-v1-compat-routine-0036"
+      },
+      "reason": "SuccessfulCreate",
+      "note": "Created pod: worker-rs-992",
+      "type": "Normal",
+      "reportingController": "k8s.io/kube-scheduler",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:11:40.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:11:40.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "pod-core-v1-compat-7.1036",
+        "namespace": "default",
+        "uid": "uid-core-v1-compat-routine-0037",
+        "creationTimestamp": "2026-11-14T10:12:00.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Pod",
+        "name": "pod-core-v1-compat-7",
+        "namespace": "default",
+        "uid": "obj-uid-core-v1-compat-routine-0037"
+      },
+      "reason": "ScalingReplicaSet",
+      "note": "Scaled up replica set frontend-6f97d5",
+      "type": "Normal",
+      "reportingController": "k8s.io/kubelet",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:12:00.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:12:00.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "deployment-core-v1-compat-8.1037",
+        "namespace": "kube-system",
+        "uid": "uid-core-v1-compat-routine-0038",
+        "creationTimestamp": "2026-11-14T10:12:20.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Deployment",
+        "name": "deployment-core-v1-compat-8",
+        "namespace": "kube-system",
+        "uid": "obj-uid-core-v1-compat-routine-0038"
+      },
+      "reason": "NodeReady",
+      "note": "Node node-worker-2 status is now: NodeReady",
+      "type": "Normal",
+      "reportingController": "k8s.io/kube-scheduler",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:12:20.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:12:20.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "replicaset-core-v1-compat-9.1038",
+        "namespace": "monitoring",
+        "uid": "uid-core-v1-compat-routine-0039",
+        "creationTimestamp": "2026-11-14T10:12:40.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "ReplicaSet",
+        "name": "replicaset-core-v1-compat-9",
+        "namespace": "monitoring",
+        "uid": "obj-uid-core-v1-compat-routine-0039"
+      },
+      "reason": "ProbeWarning",
+      "note": "Readiness probe returned HTTP 503",
+      "type": "Warning",
+      "reportingController": "k8s.io/kubelet",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:12:40.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:12:40.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "service-core-v1-compat-10.1039",
+        "namespace": "payments",
+        "uid": "uid-core-v1-compat-routine-0040",
+        "creationTimestamp": "2026-11-14T10:13:00.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Service",
+        "name": "service-core-v1-compat-10",
+        "namespace": "payments",
+        "uid": "obj-uid-core-v1-compat-routine-0040"
+      },
+      "reason": "Unhealthy",
+      "note": "Liveness probe failed: connection refused",
+      "type": "Warning",
+      "reportingController": "k8s.io/kube-scheduler",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:13:00.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:13:00.000Z"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "node-core-v1-compat-11.1040",
+        "namespace": "ingress-nginx",
+        "uid": "uid-core-v1-compat-routine-0041",
+        "creationTimestamp": "2026-11-14T10:13:20.000Z"
+      },
+      "involvedObject": {
+        "apiVersion": "v1",
+        "kind": "Node",
+        "name": "node-core-v1-compat-11",
+        "namespace": "ingress-nginx",
+        "uid": "obj-uid-core-v1-compat-routine-0041"
+      },
+      "reason": "Scheduled",
+      "message": "Successfully assigned pod to node-worker-1",
+      "source": {
+        "component": "kubelet"
+      },
+      "firstTimestamp": "2026-11-14T10:13:20.000Z",
+      "lastTimestamp": "2026-11-14T10:13:20.000Z",
+      "count": 1,
+      "type": "Normal",
+      "eventTime": null
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "persistentvolumeclaim-core-v1-compat-12.1041",
+        "namespace": "database",
+        "uid": "uid-core-v1-compat-routine-0042",
+        "creationTimestamp": "2026-11-14T10:13:40.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "PersistentVolumeClaim",
+        "name": "persistentvolumeclaim-core-v1-compat-12",
+        "namespace": "database",
+        "uid": "obj-uid-core-v1-compat-routine-0042"
+      },
+      "reason": "Pulling",
+      "note": "Pulling image \"registry.k8s.io/pause:3.9\"",
+      "type": "Normal",
+      "reportingController": "k8s.io/kube-scheduler",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:13:40.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:13:40.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "pod-core-v1-compat-13.1042",
+        "namespace": "default",
+        "uid": "uid-core-v1-compat-routine-0043",
+        "creationTimestamp": "2026-11-14T10:14:00.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Pod",
+        "name": "pod-core-v1-compat-13",
+        "namespace": "default",
+        "uid": "obj-uid-core-v1-compat-routine-0043"
+      },
+      "reason": "Pulled",
+      "note": "Successfully pulled image in 1.42s",
+      "type": "Normal",
+      "reportingController": "k8s.io/kubelet",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:14:00.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:14:00.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "deployment-core-v1-compat-14.1043",
+        "namespace": "kube-system",
+        "uid": "uid-core-v1-compat-routine-0044",
+        "creationTimestamp": "2026-11-14T10:14:20.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Deployment",
+        "name": "deployment-core-v1-compat-14",
+        "namespace": "kube-system",
+        "uid": "obj-uid-core-v1-compat-routine-0044"
+      },
+      "reason": "Created",
+      "note": "Created container pause",
+      "type": "Normal",
+      "reportingController": "k8s.io/kube-scheduler",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:14:20.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:14:20.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "replicaset-core-v1-compat-15.1044",
+        "namespace": "monitoring",
+        "uid": "uid-core-v1-compat-routine-0045",
+        "creationTimestamp": "2026-11-14T10:14:40.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "ReplicaSet",
+        "name": "replicaset-core-v1-compat-15",
+        "namespace": "monitoring",
+        "uid": "obj-uid-core-v1-compat-routine-0045"
+      },
+      "reason": "Started",
+      "note": "Started container pause",
+      "type": "Normal",
+      "reportingController": "k8s.io/kubelet",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:14:40.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:14:40.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "service-core-v1-compat-1.1045",
+        "namespace": "payments",
+        "uid": "uid-core-v1-compat-routine-0046",
+        "creationTimestamp": "2026-11-14T10:15:00.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Service",
+        "name": "service-core-v1-compat-1",
+        "namespace": "payments",
+        "uid": "obj-uid-core-v1-compat-routine-0046"
+      },
+      "reason": "SuccessfulCreate",
+      "note": "Created pod: worker-rs-992",
+      "type": "Normal",
+      "reportingController": "k8s.io/kube-scheduler",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:15:00.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:15:00.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "node-core-v1-compat-2.1046",
+        "namespace": "ingress-nginx",
+        "uid": "uid-core-v1-compat-routine-0047",
+        "creationTimestamp": "2026-11-14T10:15:20.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Node",
+        "name": "node-core-v1-compat-2",
+        "namespace": "ingress-nginx",
+        "uid": "obj-uid-core-v1-compat-routine-0047"
+      },
+      "reason": "ScalingReplicaSet",
+      "note": "Scaled up replica set frontend-6f97d5",
+      "type": "Normal",
+      "reportingController": "k8s.io/kubelet",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:15:20.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:15:20.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "persistentvolumeclaim-core-v1-compat-3.1047",
+        "namespace": "database",
+        "uid": "uid-core-v1-compat-routine-0048",
+        "creationTimestamp": "2026-11-14T10:15:40.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "PersistentVolumeClaim",
+        "name": "persistentvolumeclaim-core-v1-compat-3",
+        "namespace": "database",
+        "uid": "obj-uid-core-v1-compat-routine-0048"
+      },
+      "reason": "NodeReady",
+      "note": "Node node-worker-2 status is now: NodeReady",
+      "type": "Normal",
+      "reportingController": "k8s.io/kube-scheduler",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:15:40.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:15:40.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "pod-core-v1-compat-4.1048",
+        "namespace": "default",
+        "uid": "uid-core-v1-compat-routine-0049",
+        "creationTimestamp": "2026-11-14T10:16:00.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Pod",
+        "name": "pod-core-v1-compat-4",
+        "namespace": "default",
+        "uid": "obj-uid-core-v1-compat-routine-0049"
+      },
+      "reason": "ProbeWarning",
+      "note": "Readiness probe returned HTTP 503",
+      "type": "Warning",
+      "reportingController": "k8s.io/kubelet",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:16:00.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:16:00.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "deployment-core-v1-compat-5.1049",
+        "namespace": "kube-system",
+        "uid": "uid-core-v1-compat-routine-0050",
+        "creationTimestamp": "2026-11-14T10:16:20.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Deployment",
+        "name": "deployment-core-v1-compat-5",
+        "namespace": "kube-system",
+        "uid": "obj-uid-core-v1-compat-routine-0050"
+      },
+      "reason": "Unhealthy",
+      "note": "Liveness probe failed: connection refused",
+      "type": "Warning",
+      "reportingController": "k8s.io/kube-scheduler",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:16:20.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:16:20.000Z"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "replicaset-core-v1-compat-6.1050",
+        "namespace": "monitoring",
+        "uid": "uid-core-v1-compat-routine-0051",
+        "creationTimestamp": "2026-11-14T10:16:40.000Z"
+      },
+      "involvedObject": {
+        "apiVersion": "v1",
+        "kind": "ReplicaSet",
+        "name": "replicaset-core-v1-compat-6",
+        "namespace": "monitoring",
+        "uid": "obj-uid-core-v1-compat-routine-0051"
+      },
+      "reason": "Scheduled",
+      "message": "Successfully assigned pod to node-worker-1",
+      "source": {
+        "component": "kubelet"
+      },
+      "firstTimestamp": "2026-11-14T10:16:40.000Z",
+      "lastTimestamp": "2026-11-14T10:16:40.000Z",
+      "count": 1,
+      "type": "Normal",
+      "eventTime": null
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "service-core-v1-compat-7.1051",
+        "namespace": "payments",
+        "uid": "uid-core-v1-compat-routine-0052",
+        "creationTimestamp": "2026-11-14T10:17:00.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Service",
+        "name": "service-core-v1-compat-7",
+        "namespace": "payments",
+        "uid": "obj-uid-core-v1-compat-routine-0052"
+      },
+      "reason": "Pulling",
+      "note": "Pulling image \"registry.k8s.io/pause:3.9\"",
+      "type": "Normal",
+      "reportingController": "k8s.io/kube-scheduler",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:17:00.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:17:00.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "node-core-v1-compat-8.1052",
+        "namespace": "ingress-nginx",
+        "uid": "uid-core-v1-compat-routine-0053",
+        "creationTimestamp": "2026-11-14T10:17:20.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Node",
+        "name": "node-core-v1-compat-8",
+        "namespace": "ingress-nginx",
+        "uid": "obj-uid-core-v1-compat-routine-0053"
+      },
+      "reason": "Pulled",
+      "note": "Successfully pulled image in 1.42s",
+      "type": "Normal",
+      "reportingController": "k8s.io/kubelet",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:17:20.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:17:20.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "persistentvolumeclaim-core-v1-compat-9.1053",
+        "namespace": "database",
+        "uid": "uid-core-v1-compat-routine-0054",
+        "creationTimestamp": "2026-11-14T10:17:40.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "PersistentVolumeClaim",
+        "name": "persistentvolumeclaim-core-v1-compat-9",
+        "namespace": "database",
+        "uid": "obj-uid-core-v1-compat-routine-0054"
+      },
+      "reason": "Created",
+      "note": "Created container pause",
+      "type": "Normal",
+      "reportingController": "k8s.io/kube-scheduler",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:17:40.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:17:40.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "pod-core-v1-compat-10.1054",
+        "namespace": "default",
+        "uid": "uid-core-v1-compat-routine-0055",
+        "creationTimestamp": "2026-11-14T10:18:00.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Pod",
+        "name": "pod-core-v1-compat-10",
+        "namespace": "default",
+        "uid": "obj-uid-core-v1-compat-routine-0055"
+      },
+      "reason": "Started",
+      "note": "Started container pause",
+      "type": "Normal",
+      "reportingController": "k8s.io/kubelet",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:18:00.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:18:00.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "deployment-core-v1-compat-11.1055",
+        "namespace": "kube-system",
+        "uid": "uid-core-v1-compat-routine-0056",
+        "creationTimestamp": "2026-11-14T10:18:20.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Deployment",
+        "name": "deployment-core-v1-compat-11",
+        "namespace": "kube-system",
+        "uid": "obj-uid-core-v1-compat-routine-0056"
+      },
+      "reason": "SuccessfulCreate",
+      "note": "Created pod: worker-rs-992",
+      "type": "Normal",
+      "reportingController": "k8s.io/kube-scheduler",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:18:20.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:18:20.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "replicaset-core-v1-compat-12.1056",
+        "namespace": "monitoring",
+        "uid": "uid-core-v1-compat-routine-0057",
+        "creationTimestamp": "2026-11-14T10:18:40.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "ReplicaSet",
+        "name": "replicaset-core-v1-compat-12",
+        "namespace": "monitoring",
+        "uid": "obj-uid-core-v1-compat-routine-0057"
+      },
+      "reason": "ScalingReplicaSet",
+      "note": "Scaled up replica set frontend-6f97d5",
+      "type": "Normal",
+      "reportingController": "k8s.io/kubelet",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:18:40.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:18:40.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "service-core-v1-compat-13.1057",
+        "namespace": "payments",
+        "uid": "uid-core-v1-compat-routine-0058",
+        "creationTimestamp": "2026-11-14T10:19:00.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Service",
+        "name": "service-core-v1-compat-13",
+        "namespace": "payments",
+        "uid": "obj-uid-core-v1-compat-routine-0058"
+      },
+      "reason": "NodeReady",
+      "note": "Node node-worker-2 status is now: NodeReady",
+      "type": "Normal",
+      "reportingController": "k8s.io/kube-scheduler",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:19:00.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:19:00.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "node-core-v1-compat-14.1058",
+        "namespace": "ingress-nginx",
+        "uid": "uid-core-v1-compat-routine-0059",
+        "creationTimestamp": "2026-11-14T10:19:20.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Node",
+        "name": "node-core-v1-compat-14",
+        "namespace": "ingress-nginx",
+        "uid": "obj-uid-core-v1-compat-routine-0059"
+      },
+      "reason": "ProbeWarning",
+      "note": "Readiness probe returned HTTP 503",
+      "type": "Warning",
+      "reportingController": "k8s.io/kubelet",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:19:20.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:19:20.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "persistentvolumeclaim-core-v1-compat-15.1059",
+        "namespace": "database",
+        "uid": "uid-core-v1-compat-routine-0060",
+        "creationTimestamp": "2026-11-14T10:19:40.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "PersistentVolumeClaim",
+        "name": "persistentvolumeclaim-core-v1-compat-15",
+        "namespace": "database",
+        "uid": "obj-uid-core-v1-compat-routine-0060"
+      },
+      "reason": "Unhealthy",
+      "note": "Liveness probe failed: connection refused",
+      "type": "Warning",
+      "reportingController": "k8s.io/kube-scheduler",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:19:40.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:19:40.000Z"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "pod-core-v1-compat-1.1060",
+        "namespace": "default",
+        "uid": "uid-core-v1-compat-routine-0061",
+        "creationTimestamp": "2026-11-14T10:20:00.000Z"
+      },
+      "involvedObject": {
+        "apiVersion": "v1",
+        "kind": "Pod",
+        "name": "pod-core-v1-compat-1",
+        "namespace": "default",
+        "uid": "obj-uid-core-v1-compat-routine-0061"
+      },
+      "reason": "Scheduled",
+      "message": "Successfully assigned pod to node-worker-1",
+      "source": {
+        "component": "kubelet"
+      },
+      "firstTimestamp": "2026-11-14T10:20:00.000Z",
+      "lastTimestamp": "2026-11-14T10:20:00.000Z",
+      "count": 1,
+      "type": "Normal",
+      "eventTime": null
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "deployment-core-v1-compat-2.1061",
+        "namespace": "kube-system",
+        "uid": "uid-core-v1-compat-routine-0062",
+        "creationTimestamp": "2026-11-14T10:20:20.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Deployment",
+        "name": "deployment-core-v1-compat-2",
+        "namespace": "kube-system",
+        "uid": "obj-uid-core-v1-compat-routine-0062"
+      },
+      "reason": "Pulling",
+      "note": "Pulling image \"registry.k8s.io/pause:3.9\"",
+      "type": "Normal",
+      "reportingController": "k8s.io/kube-scheduler",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:20:20.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:20:20.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "replicaset-core-v1-compat-3.1062",
+        "namespace": "monitoring",
+        "uid": "uid-core-v1-compat-routine-0063",
+        "creationTimestamp": "2026-11-14T10:20:40.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "ReplicaSet",
+        "name": "replicaset-core-v1-compat-3",
+        "namespace": "monitoring",
+        "uid": "obj-uid-core-v1-compat-routine-0063"
+      },
+      "reason": "Pulled",
+      "note": "Successfully pulled image in 1.42s",
+      "type": "Normal",
+      "reportingController": "k8s.io/kubelet",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:20:40.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:20:40.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "service-core-v1-compat-4.1063",
+        "namespace": "payments",
+        "uid": "uid-core-v1-compat-routine-0064",
+        "creationTimestamp": "2026-11-14T10:21:00.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Service",
+        "name": "service-core-v1-compat-4",
+        "namespace": "payments",
+        "uid": "obj-uid-core-v1-compat-routine-0064"
+      },
+      "reason": "Created",
+      "note": "Created container pause",
+      "type": "Normal",
+      "reportingController": "k8s.io/kube-scheduler",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:21:00.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:21:00.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "node-core-v1-compat-5.1064",
+        "namespace": "ingress-nginx",
+        "uid": "uid-core-v1-compat-routine-0065",
+        "creationTimestamp": "2026-11-14T10:21:20.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Node",
+        "name": "node-core-v1-compat-5",
+        "namespace": "ingress-nginx",
+        "uid": "obj-uid-core-v1-compat-routine-0065"
+      },
+      "reason": "Started",
+      "note": "Started container pause",
+      "type": "Normal",
+      "reportingController": "k8s.io/kubelet",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:21:20.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:21:20.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "persistentvolumeclaim-core-v1-compat-6.1065",
+        "namespace": "database",
+        "uid": "uid-core-v1-compat-routine-0066",
+        "creationTimestamp": "2026-11-14T10:21:40.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "PersistentVolumeClaim",
+        "name": "persistentvolumeclaim-core-v1-compat-6",
+        "namespace": "database",
+        "uid": "obj-uid-core-v1-compat-routine-0066"
+      },
+      "reason": "SuccessfulCreate",
+      "note": "Created pod: worker-rs-992",
+      "type": "Normal",
+      "reportingController": "k8s.io/kube-scheduler",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:21:40.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:21:40.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "pod-core-v1-compat-7.1066",
+        "namespace": "default",
+        "uid": "uid-core-v1-compat-routine-0067",
+        "creationTimestamp": "2026-11-14T10:22:00.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Pod",
+        "name": "pod-core-v1-compat-7",
+        "namespace": "default",
+        "uid": "obj-uid-core-v1-compat-routine-0067"
+      },
+      "reason": "ScalingReplicaSet",
+      "note": "Scaled up replica set frontend-6f97d5",
+      "type": "Normal",
+      "reportingController": "k8s.io/kubelet",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:22:00.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:22:00.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "deployment-core-v1-compat-8.1067",
+        "namespace": "kube-system",
+        "uid": "uid-core-v1-compat-routine-0068",
+        "creationTimestamp": "2026-11-14T10:22:20.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Deployment",
+        "name": "deployment-core-v1-compat-8",
+        "namespace": "kube-system",
+        "uid": "obj-uid-core-v1-compat-routine-0068"
+      },
+      "reason": "NodeReady",
+      "note": "Node node-worker-2 status is now: NodeReady",
+      "type": "Normal",
+      "reportingController": "k8s.io/kube-scheduler",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:22:20.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:22:20.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "replicaset-core-v1-compat-9.1068",
+        "namespace": "monitoring",
+        "uid": "uid-core-v1-compat-routine-0069",
+        "creationTimestamp": "2026-11-14T10:22:40.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "ReplicaSet",
+        "name": "replicaset-core-v1-compat-9",
+        "namespace": "monitoring",
+        "uid": "obj-uid-core-v1-compat-routine-0069"
+      },
+      "reason": "ProbeWarning",
+      "note": "Readiness probe returned HTTP 503",
+      "type": "Warning",
+      "reportingController": "k8s.io/kubelet",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:22:40.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:22:40.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "service-core-v1-compat-10.1069",
+        "namespace": "payments",
+        "uid": "uid-core-v1-compat-routine-0070",
+        "creationTimestamp": "2026-11-14T10:23:00.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Service",
+        "name": "service-core-v1-compat-10",
+        "namespace": "payments",
+        "uid": "obj-uid-core-v1-compat-routine-0070"
+      },
+      "reason": "Unhealthy",
+      "note": "Liveness probe failed: connection refused",
+      "type": "Warning",
+      "reportingController": "k8s.io/kube-scheduler",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:23:00.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:23:00.000Z"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "node-core-v1-compat-11.1070",
+        "namespace": "ingress-nginx",
+        "uid": "uid-core-v1-compat-routine-0071",
+        "creationTimestamp": "2026-11-14T10:23:20.000Z"
+      },
+      "involvedObject": {
+        "apiVersion": "v1",
+        "kind": "Node",
+        "name": "node-core-v1-compat-11",
+        "namespace": "ingress-nginx",
+        "uid": "obj-uid-core-v1-compat-routine-0071"
+      },
+      "reason": "Scheduled",
+      "message": "Successfully assigned pod to node-worker-1",
+      "source": {
+        "component": "kubelet"
+      },
+      "firstTimestamp": "2026-11-14T10:23:20.000Z",
+      "lastTimestamp": "2026-11-14T10:23:20.000Z",
+      "count": 1,
+      "type": "Normal",
+      "eventTime": null
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "persistentvolumeclaim-core-v1-compat-12.1071",
+        "namespace": "database",
+        "uid": "uid-core-v1-compat-routine-0072",
+        "creationTimestamp": "2026-11-14T10:23:40.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "PersistentVolumeClaim",
+        "name": "persistentvolumeclaim-core-v1-compat-12",
+        "namespace": "database",
+        "uid": "obj-uid-core-v1-compat-routine-0072"
+      },
+      "reason": "Pulling",
+      "note": "Pulling image \"registry.k8s.io/pause:3.9\"",
+      "type": "Normal",
+      "reportingController": "k8s.io/kube-scheduler",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:23:40.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:23:40.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "pod-core-v1-compat-13.1072",
+        "namespace": "default",
+        "uid": "uid-core-v1-compat-routine-0073",
+        "creationTimestamp": "2026-11-14T10:24:00.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Pod",
+        "name": "pod-core-v1-compat-13",
+        "namespace": "default",
+        "uid": "obj-uid-core-v1-compat-routine-0073"
+      },
+      "reason": "Pulled",
+      "note": "Successfully pulled image in 1.42s",
+      "type": "Normal",
+      "reportingController": "k8s.io/kubelet",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:24:00.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:24:00.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "deployment-core-v1-compat-14.1073",
+        "namespace": "kube-system",
+        "uid": "uid-core-v1-compat-routine-0074",
+        "creationTimestamp": "2026-11-14T10:24:20.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Deployment",
+        "name": "deployment-core-v1-compat-14",
+        "namespace": "kube-system",
+        "uid": "obj-uid-core-v1-compat-routine-0074"
+      },
+      "reason": "Created",
+      "note": "Created container pause",
+      "type": "Normal",
+      "reportingController": "k8s.io/kube-scheduler",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:24:20.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:24:20.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "replicaset-core-v1-compat-15.1074",
+        "namespace": "monitoring",
+        "uid": "uid-core-v1-compat-routine-0075",
+        "creationTimestamp": "2026-11-14T10:24:40.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "ReplicaSet",
+        "name": "replicaset-core-v1-compat-15",
+        "namespace": "monitoring",
+        "uid": "obj-uid-core-v1-compat-routine-0075"
+      },
+      "reason": "Started",
+      "note": "Started container pause",
+      "type": "Normal",
+      "reportingController": "k8s.io/kubelet",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:24:40.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:24:40.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "service-core-v1-compat-1.1075",
+        "namespace": "payments",
+        "uid": "uid-core-v1-compat-routine-0076",
+        "creationTimestamp": "2026-11-14T10:25:00.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Service",
+        "name": "service-core-v1-compat-1",
+        "namespace": "payments",
+        "uid": "obj-uid-core-v1-compat-routine-0076"
+      },
+      "reason": "SuccessfulCreate",
+      "note": "Created pod: worker-rs-992",
+      "type": "Normal",
+      "reportingController": "k8s.io/kube-scheduler",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:25:00.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:25:00.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "node-core-v1-compat-2.1076",
+        "namespace": "ingress-nginx",
+        "uid": "uid-core-v1-compat-routine-0077",
+        "creationTimestamp": "2026-11-14T10:25:20.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Node",
+        "name": "node-core-v1-compat-2",
+        "namespace": "ingress-nginx",
+        "uid": "obj-uid-core-v1-compat-routine-0077"
+      },
+      "reason": "ScalingReplicaSet",
+      "note": "Scaled up replica set frontend-6f97d5",
+      "type": "Normal",
+      "reportingController": "k8s.io/kubelet",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:25:20.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:25:20.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "persistentvolumeclaim-core-v1-compat-3.1077",
+        "namespace": "database",
+        "uid": "uid-core-v1-compat-routine-0078",
+        "creationTimestamp": "2026-11-14T10:25:40.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "PersistentVolumeClaim",
+        "name": "persistentvolumeclaim-core-v1-compat-3",
+        "namespace": "database",
+        "uid": "obj-uid-core-v1-compat-routine-0078"
+      },
+      "reason": "NodeReady",
+      "note": "Node node-worker-2 status is now: NodeReady",
+      "type": "Normal",
+      "reportingController": "k8s.io/kube-scheduler",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:25:40.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:25:40.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "pod-core-v1-compat-4.1078",
+        "namespace": "default",
+        "uid": "uid-core-v1-compat-routine-0079",
+        "creationTimestamp": "2026-11-14T10:26:00.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Pod",
+        "name": "pod-core-v1-compat-4",
+        "namespace": "default",
+        "uid": "obj-uid-core-v1-compat-routine-0079"
+      },
+      "reason": "ProbeWarning",
+      "note": "Readiness probe returned HTTP 503",
+      "type": "Warning",
+      "reportingController": "k8s.io/kubelet",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:26:00.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:26:00.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "deployment-core-v1-compat-5.1079",
+        "namespace": "kube-system",
+        "uid": "uid-core-v1-compat-routine-0080",
+        "creationTimestamp": "2026-11-14T10:26:20.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Deployment",
+        "name": "deployment-core-v1-compat-5",
+        "namespace": "kube-system",
+        "uid": "obj-uid-core-v1-compat-routine-0080"
+      },
+      "reason": "Unhealthy",
+      "note": "Liveness probe failed: connection refused",
+      "type": "Warning",
+      "reportingController": "k8s.io/kube-scheduler",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:26:20.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:26:20.000Z"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "replicaset-core-v1-compat-6.1080",
+        "namespace": "monitoring",
+        "uid": "uid-core-v1-compat-routine-0081",
+        "creationTimestamp": "2026-11-14T10:26:40.000Z"
+      },
+      "involvedObject": {
+        "apiVersion": "v1",
+        "kind": "ReplicaSet",
+        "name": "replicaset-core-v1-compat-6",
+        "namespace": "monitoring",
+        "uid": "obj-uid-core-v1-compat-routine-0081"
+      },
+      "reason": "Scheduled",
+      "message": "Successfully assigned pod to node-worker-1",
+      "source": {
+        "component": "kubelet"
+      },
+      "firstTimestamp": "2026-11-14T10:26:40.000Z",
+      "lastTimestamp": "2026-11-14T10:26:40.000Z",
+      "count": 1,
+      "type": "Normal",
+      "eventTime": null
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "service-core-v1-compat-7.1081",
+        "namespace": "payments",
+        "uid": "uid-core-v1-compat-routine-0082",
+        "creationTimestamp": "2026-11-14T10:27:00.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Service",
+        "name": "service-core-v1-compat-7",
+        "namespace": "payments",
+        "uid": "obj-uid-core-v1-compat-routine-0082"
+      },
+      "reason": "Pulling",
+      "note": "Pulling image \"registry.k8s.io/pause:3.9\"",
+      "type": "Normal",
+      "reportingController": "k8s.io/kube-scheduler",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:27:00.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:27:00.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "node-core-v1-compat-8.1082",
+        "namespace": "ingress-nginx",
+        "uid": "uid-core-v1-compat-routine-0083",
+        "creationTimestamp": "2026-11-14T10:27:20.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Node",
+        "name": "node-core-v1-compat-8",
+        "namespace": "ingress-nginx",
+        "uid": "obj-uid-core-v1-compat-routine-0083"
+      },
+      "reason": "Pulled",
+      "note": "Successfully pulled image in 1.42s",
+      "type": "Normal",
+      "reportingController": "k8s.io/kubelet",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:27:20.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:27:20.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "persistentvolumeclaim-core-v1-compat-9.1083",
+        "namespace": "database",
+        "uid": "uid-core-v1-compat-routine-0084",
+        "creationTimestamp": "2026-11-14T10:27:40.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "PersistentVolumeClaim",
+        "name": "persistentvolumeclaim-core-v1-compat-9",
+        "namespace": "database",
+        "uid": "obj-uid-core-v1-compat-routine-0084"
+      },
+      "reason": "Created",
+      "note": "Created container pause",
+      "type": "Normal",
+      "reportingController": "k8s.io/kube-scheduler",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:27:40.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:27:40.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "pod-core-v1-compat-10.1084",
+        "namespace": "default",
+        "uid": "uid-core-v1-compat-routine-0085",
+        "creationTimestamp": "2026-11-14T10:28:00.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Pod",
+        "name": "pod-core-v1-compat-10",
+        "namespace": "default",
+        "uid": "obj-uid-core-v1-compat-routine-0085"
+      },
+      "reason": "Started",
+      "note": "Started container pause",
+      "type": "Normal",
+      "reportingController": "k8s.io/kubelet",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:28:00.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:28:00.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "deployment-core-v1-compat-11.1085",
+        "namespace": "kube-system",
+        "uid": "uid-core-v1-compat-routine-0086",
+        "creationTimestamp": "2026-11-14T10:28:20.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Deployment",
+        "name": "deployment-core-v1-compat-11",
+        "namespace": "kube-system",
+        "uid": "obj-uid-core-v1-compat-routine-0086"
+      },
+      "reason": "SuccessfulCreate",
+      "note": "Created pod: worker-rs-992",
+      "type": "Normal",
+      "reportingController": "k8s.io/kube-scheduler",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:28:20.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:28:20.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "replicaset-core-v1-compat-12.1086",
+        "namespace": "monitoring",
+        "uid": "uid-core-v1-compat-routine-0087",
+        "creationTimestamp": "2026-11-14T10:28:40.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "ReplicaSet",
+        "name": "replicaset-core-v1-compat-12",
+        "namespace": "monitoring",
+        "uid": "obj-uid-core-v1-compat-routine-0087"
+      },
+      "reason": "ScalingReplicaSet",
+      "note": "Scaled up replica set frontend-6f97d5",
+      "type": "Normal",
+      "reportingController": "k8s.io/kubelet",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:28:40.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:28:40.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "service-core-v1-compat-13.1087",
+        "namespace": "payments",
+        "uid": "uid-core-v1-compat-routine-0088",
+        "creationTimestamp": "2026-11-14T10:29:00.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Service",
+        "name": "service-core-v1-compat-13",
+        "namespace": "payments",
+        "uid": "obj-uid-core-v1-compat-routine-0088"
+      },
+      "reason": "NodeReady",
+      "note": "Node node-worker-2 status is now: NodeReady",
+      "type": "Normal",
+      "reportingController": "k8s.io/kube-scheduler",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:29:00.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:29:00.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "node-core-v1-compat-14.1088",
+        "namespace": "ingress-nginx",
+        "uid": "uid-core-v1-compat-routine-0089",
+        "creationTimestamp": "2026-11-14T10:29:20.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Node",
+        "name": "node-core-v1-compat-14",
+        "namespace": "ingress-nginx",
+        "uid": "obj-uid-core-v1-compat-routine-0089"
+      },
+      "reason": "ProbeWarning",
+      "note": "Readiness probe returned HTTP 503",
+      "type": "Warning",
+      "reportingController": "k8s.io/kubelet",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:29:20.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:29:20.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "persistentvolumeclaim-core-v1-compat-15.1089",
+        "namespace": "database",
+        "uid": "uid-core-v1-compat-routine-0090",
+        "creationTimestamp": "2026-11-14T10:29:40.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "PersistentVolumeClaim",
+        "name": "persistentvolumeclaim-core-v1-compat-15",
+        "namespace": "database",
+        "uid": "obj-uid-core-v1-compat-routine-0090"
+      },
+      "reason": "Unhealthy",
+      "note": "Liveness probe failed: connection refused",
+      "type": "Warning",
+      "reportingController": "k8s.io/kube-scheduler",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:29:40.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:29:40.000Z"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "pod-core-v1-compat-1.1090",
+        "namespace": "default",
+        "uid": "uid-core-v1-compat-routine-0091",
+        "creationTimestamp": "2026-11-14T10:30:00.000Z"
+      },
+      "involvedObject": {
+        "apiVersion": "v1",
+        "kind": "Pod",
+        "name": "pod-core-v1-compat-1",
+        "namespace": "default",
+        "uid": "obj-uid-core-v1-compat-routine-0091"
+      },
+      "reason": "Scheduled",
+      "message": "Successfully assigned pod to node-worker-1",
+      "source": {
+        "component": "kubelet"
+      },
+      "firstTimestamp": "2026-11-14T10:30:00.000Z",
+      "lastTimestamp": "2026-11-14T10:30:00.000Z",
+      "count": 1,
+      "type": "Normal",
+      "eventTime": null
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "deployment-core-v1-compat-2.1091",
+        "namespace": "kube-system",
+        "uid": "uid-core-v1-compat-routine-0092",
+        "creationTimestamp": "2026-11-14T10:30:20.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Deployment",
+        "name": "deployment-core-v1-compat-2",
+        "namespace": "kube-system",
+        "uid": "obj-uid-core-v1-compat-routine-0092"
+      },
+      "reason": "Pulling",
+      "note": "Pulling image \"registry.k8s.io/pause:3.9\"",
+      "type": "Normal",
+      "reportingController": "k8s.io/kube-scheduler",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:30:20.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:30:20.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "replicaset-core-v1-compat-3.1092",
+        "namespace": "monitoring",
+        "uid": "uid-core-v1-compat-routine-0093",
+        "creationTimestamp": "2026-11-14T10:30:40.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "ReplicaSet",
+        "name": "replicaset-core-v1-compat-3",
+        "namespace": "monitoring",
+        "uid": "obj-uid-core-v1-compat-routine-0093"
+      },
+      "reason": "Pulled",
+      "note": "Successfully pulled image in 1.42s",
+      "type": "Normal",
+      "reportingController": "k8s.io/kubelet",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:30:40.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:30:40.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "service-core-v1-compat-4.1093",
+        "namespace": "payments",
+        "uid": "uid-core-v1-compat-routine-0094",
+        "creationTimestamp": "2026-11-14T10:31:00.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Service",
+        "name": "service-core-v1-compat-4",
+        "namespace": "payments",
+        "uid": "obj-uid-core-v1-compat-routine-0094"
+      },
+      "reason": "Created",
+      "note": "Created container pause",
+      "type": "Normal",
+      "reportingController": "k8s.io/kube-scheduler",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:31:00.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:31:00.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "node-core-v1-compat-5.1094",
+        "namespace": "ingress-nginx",
+        "uid": "uid-core-v1-compat-routine-0095",
+        "creationTimestamp": "2026-11-14T10:31:20.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Node",
+        "name": "node-core-v1-compat-5",
+        "namespace": "ingress-nginx",
+        "uid": "obj-uid-core-v1-compat-routine-0095"
+      },
+      "reason": "Started",
+      "note": "Started container pause",
+      "type": "Normal",
+      "reportingController": "k8s.io/kubelet",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:31:20.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:31:20.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "persistentvolumeclaim-core-v1-compat-6.1095",
+        "namespace": "database",
+        "uid": "uid-core-v1-compat-routine-0096",
+        "creationTimestamp": "2026-11-14T10:31:40.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "PersistentVolumeClaim",
+        "name": "persistentvolumeclaim-core-v1-compat-6",
+        "namespace": "database",
+        "uid": "obj-uid-core-v1-compat-routine-0096"
+      },
+      "reason": "SuccessfulCreate",
+      "note": "Created pod: worker-rs-992",
+      "type": "Normal",
+      "reportingController": "k8s.io/kube-scheduler",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:31:40.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:31:40.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "pod-core-v1-compat-7.1096",
+        "namespace": "default",
+        "uid": "uid-core-v1-compat-routine-0097",
+        "creationTimestamp": "2026-11-14T10:32:00.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Pod",
+        "name": "pod-core-v1-compat-7",
+        "namespace": "default",
+        "uid": "obj-uid-core-v1-compat-routine-0097"
+      },
+      "reason": "ScalingReplicaSet",
+      "note": "Scaled up replica set frontend-6f97d5",
+      "type": "Normal",
+      "reportingController": "k8s.io/kubelet",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:32:00.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:32:00.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "deployment-core-v1-compat-8.1097",
+        "namespace": "kube-system",
+        "uid": "uid-core-v1-compat-routine-0098",
+        "creationTimestamp": "2026-11-14T10:32:20.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Deployment",
+        "name": "deployment-core-v1-compat-8",
+        "namespace": "kube-system",
+        "uid": "obj-uid-core-v1-compat-routine-0098"
+      },
+      "reason": "NodeReady",
+      "note": "Node node-worker-2 status is now: NodeReady",
+      "type": "Normal",
+      "reportingController": "k8s.io/kube-scheduler",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:32:20.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:32:20.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "replicaset-core-v1-compat-9.1098",
+        "namespace": "monitoring",
+        "uid": "uid-core-v1-compat-routine-0099",
+        "creationTimestamp": "2026-11-14T10:32:40.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "ReplicaSet",
+        "name": "replicaset-core-v1-compat-9",
+        "namespace": "monitoring",
+        "uid": "obj-uid-core-v1-compat-routine-0099"
+      },
+      "reason": "ProbeWarning",
+      "note": "Readiness probe returned HTTP 503",
+      "type": "Warning",
+      "reportingController": "k8s.io/kubelet",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:32:40.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:32:40.000Z"
+      }
+    },
+    {
+      "apiVersion": "events.k8s.io/v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "service-core-v1-compat-10.1099",
+        "namespace": "payments",
+        "uid": "uid-core-v1-compat-routine-0100",
+        "creationTimestamp": "2026-11-14T10:33:00.000Z"
+      },
+      "regarding": {
+        "apiVersion": "v1",
+        "kind": "Service",
+        "name": "service-core-v1-compat-10",
+        "namespace": "payments",
+        "uid": "obj-uid-core-v1-compat-routine-0100"
+      },
+      "reason": "Unhealthy",
+      "note": "Liveness probe failed: connection refused",
+      "type": "Warning",
+      "reportingController": "k8s.io/kube-scheduler",
+      "reportingInstance": "node-worker-1",
+      "action": "Binding",
+      "eventTime": "2026-11-14T10:33:00.000Z",
+      "series": {
+        "count": 1,
+        "lastObservedTime": "2026-11-14T10:33:00.000Z"
+      }
+    }
+  ],
+  "steps": []
+}
