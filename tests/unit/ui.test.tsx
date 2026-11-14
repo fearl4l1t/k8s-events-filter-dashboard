@@ -285,7 +285,9 @@ describe('UI Components', () => {
     render(<App />);
     expect(screen.getByTestId('app-container')).toBeDefined();
     expect(screen.getByTestId('loading-state')).toBeDefined();
-    await waitFor(() => expect(screen.getByTestId('overview-panel')).toBeDefined());
+    // The simulator module imports the bundled scenario fixtures; give CI enough
+    // time to finish that asynchronous initialization on slower workers.
+    await waitFor(() => expect(screen.getByTestId('overview-panel')).toBeDefined(), { timeout: 10_000 });
 
     // Switch to Explorer
     fireEvent.click(screen.getByTestId('nav-tab-explorer'));
