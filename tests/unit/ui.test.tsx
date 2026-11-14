@@ -56,6 +56,22 @@ global.ResizeObserver = class ResizeObserver {
   disconnect() {}
 };
 
+Object.defineProperty(HTMLDialogElement.prototype, 'showModal', {
+  configurable: true,
+  value(this: HTMLDialogElement) {
+    this.setAttribute('open', '');
+    this.querySelector<HTMLElement>('button:not([disabled])')?.focus();
+  },
+});
+Object.defineProperty(HTMLDialogElement.prototype, 'close', {
+  configurable: true,
+  value(this: HTMLDialogElement, returnValue = '') {
+    this.returnValue = returnValue;
+    this.removeAttribute('open');
+    this.dispatchEvent(new Event('close'));
+  },
+});
+
 describe('UI Components', () => {
   afterEach(() => {
     cleanup();
@@ -118,36 +134,28 @@ describe('UI Components', () => {
     // Reset button opens confirmation dialog
     fireEvent.click(screen.getByTestId('sim-reset-btn'));
     expect(screen.getByTestId('confirm-reset-btn')).toBeDefined();
-    fireEvent.keyDown(document, { key: 'Tab', shiftKey: true });
-    expect(document.activeElement).toBe(screen.getByTestId('confirm-reset-btn'));
-    fireEvent.keyDown(document, { key: 'Tab' });
+    expect(screen.getByRole('dialog', { name: 'Reset Scenario' })).toBeDefined();
     expect(document.activeElement).toBe(screen.getByTestId('cancel-reset-btn'));
     fireEvent.click(screen.getByTestId('confirm-reset-btn'));
     expect(onReset).toHaveBeenCalled();
   });
 
-  it('renders DetailPanel and handles close with Escape and button', () => {
+  it('renders DetailPanel as a native modal and closes through its button', () => {
     const onClose = vi.fn();
     render(<DetailPanel event={mockEvent} onClose={onClose} />);
 
     expect(screen.getByTestId('detail-panel')).toBeDefined();
     expect(screen.getByText('Back-off pulling image auth:v1')).toBeDefined();
     expect(screen.getByTestId('occurrence-count-display')).toBeDefined();
-    fireEvent.keyDown(document, { key: 'Tab' });
-    expect(document.activeElement).toBe(screen.getByTestId('detail-close-btn'));
-    fireEvent.keyDown(document, { key: 'Tab', shiftKey: true });
+    expect(screen.getByRole('dialog', { name: 'Event Detail' })).toBeDefined();
     expect(document.activeElement).toBe(screen.getByTestId('detail-close-btn'));
 
     // Close button
     fireEvent.click(screen.getByTestId('detail-close-btn'));
-    expect(onClose).toHaveBeenCalled();
-
-    // Escape key
-    fireEvent.keyDown(document, { key: 'Escape' });
-    expect(onClose).toHaveBeenCalledTimes(2);
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 
-  it('returns focus to the explorer fallback when a detail row is no longer connected', () => {
+  it('returns focus to the explorer fallback when a detail row is no longer connected', async () => {
     const onClose = vi.fn();
     const detachedTrigger = document.createElement('button');
     const fallback = document.createElement('input');
@@ -162,7 +170,7 @@ describe('UI Components', () => {
     );
 
     fireEvent.click(screen.getByTestId('detail-close-btn'));
-    expect(document.activeElement).toBe(fallback);
+    await waitFor(() => expect(document.activeElement).toBe(fallback));
     expect(onClose).toHaveBeenCalled();
     fallback.remove();
   });

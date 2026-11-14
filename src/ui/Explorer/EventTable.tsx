@@ -42,18 +42,20 @@ export const EventTable: React.FC<EventTableProps> = ({
   onSelectEvent,
   onSortChange,
 }) => {
-  const rowRefs = React.useRef<Map<string, HTMLTableRowElement>>(new Map());
-
-  function handleKeyDown(e: React.KeyboardEvent<HTMLTableRowElement>, id: string) {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      onSelectEvent(id, e.currentTarget);
-    }
-  }
+  const actionRefs = React.useRef<Map<string, HTMLButtonElement>>(new Map());
 
   return (
-    <div className="table-wrapper" data-testid="event-table">
-      <table className="events-table" role="grid" aria-label="Kubernetes events">
+    <div
+      className="table-wrapper"
+      data-testid="event-table"
+      // Make the overflow region keyboard-scrollable on narrow screens.
+      // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
+      tabIndex={0}
+      role="region"
+      aria-label="Scrollable Kubernetes events table"
+    >
+      <table className="events-table" aria-label="Kubernetes events">
+        <caption className="visually-hidden">Kubernetes events. Select a row to inspect its details.</caption>
         <thead>
           <tr>
             {COLUMNS.map(({ field, label }) => (
@@ -104,21 +106,31 @@ export const EventTable: React.FC<EventTableProps> = ({
               return (
                 <tr
                   key={event.id}
-                  ref={(el) => {
-                    if (el) rowRefs.current.set(event.id, el);
-                    else rowRefs.current.delete(event.id);
-                  }}
                   className={isSelected ? 'selected' : ''}
-                  onClick={(e) => onSelectEvent(event.id, e.currentTarget)}
-                  onKeyDown={(e) => handleKeyDown(e, event.id)}
-                  tabIndex={0}
-                  role="row"
-                  aria-selected={isSelected}
+                  onClick={() => {
+                    const action = actionRefs.current.get(event.id);
+                    if (action) onSelectEvent(event.id, action);
+                  }}
                   data-event-id={event.id}
                   data-testid="event-row"
                 >
                   <td style={{ whiteSpace: 'nowrap', color: 'var(--color-text-secondary)', fontSize: '0.75rem' }}>
                     {formatCompactTimestamp(event.lastObservedAt)}
+                    <button
+                      type="button"
+                      className="event-row-action"
+                      ref={(element) => {
+                        if (element) actionRefs.current.set(event.id, element);
+                        else actionRefs.current.delete(event.id);
+                      }}
+                      onClick={(clickEvent) => {
+                        clickEvent.stopPropagation();
+                        onSelectEvent(event.id, clickEvent.currentTarget);
+                      }}
+                      aria-label={`View details for ${event.reason ?? 'event'}`}
+                    >
+                      View
+                    </button>
                     {event.validationIssues.length > 0 && (
                       <span className="badge badge-warning" style={{ marginLeft: '0.25rem' }}>
                         Invalid record

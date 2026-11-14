@@ -70,39 +70,12 @@ export const Header: React.FC<HeaderProps> = ({
   onSetSpeed,
 }) => {
   const [showResetModal, setShowResetModal] = useState(false);
-  const resetButtonRef = useRef<HTMLButtonElement>(null);
-  const cancelResetRef = useRef<HTMLButtonElement>(null);
-  const resetDialogRef = useRef<HTMLDivElement>(null);
+  const resetDialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
     if (!showResetModal) return;
-    cancelResetRef.current?.focus();
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setShowResetModal(false);
-        resetButtonRef.current?.focus();
-        return;
-      }
-      if (event.key === 'Tab') {
-        const dialog = resetDialogRef.current;
-        if (!dialog) return;
-        const focusable = Array.from(dialog.querySelectorAll<HTMLElement>(
-          'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-        ));
-        const first = focusable[0];
-        const last = focusable[focusable.length - 1];
-        const active = document.activeElement;
-        if (event.shiftKey && (active === first || !dialog.contains(active))) {
-          event.preventDefault();
-          last?.focus();
-        } else if (!event.shiftKey && (active === last || !dialog.contains(active))) {
-          event.preventDefault();
-          first?.focus();
-        }
-      }
-    };
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
+    const dialog = resetDialogRef.current;
+    if (dialog && !dialog.open) dialog.showModal();
   }, [showResetModal]);
 
   const isRunning = simulatorStatus === 'running';
@@ -113,14 +86,17 @@ export const Header: React.FC<HeaderProps> = ({
   }
 
   function handleResetConfirm() {
-    setShowResetModal(false);
-    onReset();
-    resetButtonRef.current?.focus();
+    resetDialogRef.current?.close('reset');
   }
 
   function handleResetCancel() {
+    resetDialogRef.current?.close('cancel');
+  }
+
+  function handleResetDialogClose() {
+    const shouldReset = resetDialogRef.current?.returnValue === 'reset';
     setShowResetModal(false);
-    resetButtonRef.current?.focus();
+    if (shouldReset) onReset();
   }
 
   function handleScenarioChange(e: React.ChangeEvent<HTMLSelectElement>) {
@@ -237,7 +213,6 @@ export const Header: React.FC<HeaderProps> = ({
 
           <button
             type="button"
-            ref={resetButtonRef}
             className="sim-btn"
             onClick={handleResetRequest}
             aria-label={`Reset scenario ${scenarioName}`}
@@ -250,14 +225,14 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Reset confirmation modal */}
       {showResetModal && (
-        <div
-          className="modal-backdrop"
-          role="dialog"
-          aria-modal="true"
+        <dialog
+          className="reset-dialog"
+          ref={resetDialogRef}
+          onClose={handleResetDialogClose}
           aria-labelledby="reset-modal-title"
           aria-describedby="reset-modal-desc"
         >
-          <div className="modal-content" ref={resetDialogRef}>
+          <div className="modal-content">
             <h2 id="reset-modal-title" style={{ fontSize: '1rem', fontWeight: 700 }}>
               Reset Scenario
             </h2>
@@ -269,7 +244,6 @@ export const Header: React.FC<HeaderProps> = ({
             <div className="modal-actions">
               <button
                 type="button"
-                ref={cancelResetRef}
                 className="sim-btn"
                 onClick={handleResetCancel}
                 data-testid="cancel-reset-btn"
@@ -291,7 +265,7 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
             </div>
           </div>
-        </div>
+        </dialog>
       )}
     </>
   );

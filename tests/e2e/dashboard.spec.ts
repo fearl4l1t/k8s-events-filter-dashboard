@@ -132,24 +132,27 @@ test.describe('Kubernetes Events Filter Dashboard Acceptance Tests', () => {
   test('detail panel returns focus to its source row after Escape', async ({ page }) => {
     await page.getByTestId('nav-tab-explorer').click();
     const row = page.getByTestId('event-row').first();
-    await row.focus();
+    const openDetails = row.getByRole('button', { name: /View details for/ });
+    await openDetails.focus();
     await page.keyboard.press('Enter');
     await expect(page.getByRole('button', { name: 'Close event detail panel' })).toBeFocused();
     await page.keyboard.press('Escape');
     await expect(page.getByTestId('detail-panel')).not.toBeVisible();
-    await expect(row).toBeFocused();
+    await expect(openDetails).toBeFocused();
   });
 
-  test('detail dialog keeps keyboard focus within the panel', async ({ page }) => {
+  test('native detail modal blocks focus from returning to the background page', async ({ page }) => {
     await page.getByTestId('nav-tab-explorer').click();
     await page.getByTestId('event-row').first().click();
-    const close = page.getByTestId('detail-close-btn');
-    await expect(close).toBeFocused();
+    const dialog = page.getByTestId('detail-panel');
+    await expect(page.getByTestId('detail-close-btn')).toBeFocused();
     await page.keyboard.press('Tab');
-    await expect(close).toBeFocused();
-    await page.keyboard.press('Shift+Tab');
-    await expect(close).toBeFocused();
+    await expect(dialog).toHaveAttribute('open', '');
+    const search = page.getByTestId('keyword-search');
+    await search.focus();
+    await expect(search).not.toBeFocused();
     await page.keyboard.press('Escape');
+    await expect(dialog).not.toBeVisible();
   });
 
   // TC-07: Pause and resume simulator
@@ -198,16 +201,19 @@ test.describe('Kubernetes Events Filter Dashboard Acceptance Tests', () => {
     await expect(resetBtn).toBeFocused();
   });
 
-  test('reset confirmation contains keyboard focus', async ({ page }) => {
+  test('native reset confirmation blocks focus from returning to the background page', async ({ page }) => {
     await page.getByTestId('sim-reset-btn').click();
+    const dialog = page.getByRole('dialog', { name: 'Reset Scenario' });
     const cancel = page.getByTestId('cancel-reset-btn');
-    const confirm = page.getByTestId('confirm-reset-btn');
     await expect(cancel).toBeFocused();
-    await page.keyboard.press('Shift+Tab');
-    await expect(confirm).toBeFocused();
     await page.keyboard.press('Tab');
-    await expect(cancel).toBeFocused();
+    await expect(dialog).toHaveAttribute('open', '');
+    const play = page.getByTestId('sim-play-pause-btn');
+    await play.focus();
+    await expect(play).not.toBeFocused();
     await page.keyboard.press('Escape');
+    await expect(dialog).not.toBeVisible();
+    await expect(page.getByTestId('sim-reset-btn')).toBeFocused();
   });
 
   // TC-09: Export filtered events

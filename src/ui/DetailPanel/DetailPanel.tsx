@@ -43,54 +43,26 @@ function TimestampSourceLabel({ source }: { source: string }) {
 
 export const DetailPanel: React.FC<DetailPanelProps> = ({ event, onClose, triggerRef, fallbackRef }) => {
   const closeButtonRef = useRef<HTMLButtonElement>(null);
-  const panelRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDialogElement>(null);
 
   const handleClose = useCallback(() => {
+    if (panelRef.current?.open) panelRef.current.close();
+    else onClose();
+  }, [onClose]);
+
+  useEffect(() => {
+    const dialog = panelRef.current;
+    if (dialog && !dialog.open) dialog.showModal();
+  }, []);
+
+  const handleDialogClose = useCallback(() => {
     onClose();
-    const origin = triggerRef?.current;
-    if (origin?.isConnected) origin.focus();
-    else fallbackRef?.current?.focus();
+    requestAnimationFrame(() => {
+      const origin = triggerRef?.current;
+      if (origin?.isConnected) origin.focus();
+      else fallbackRef?.current?.focus();
+    });
   }, [onClose, triggerRef, fallbackRef]);
-
-  useEffect(() => {
-    // Focus close button on open
-    closeButtonRef.current?.focus();
-  }, [event.id]);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        handleClose();
-        return;
-      }
-      if (e.key === 'Tab') {
-        const panel = panelRef.current;
-        if (!panel) return;
-        const focusable = Array.from(panel.querySelectorAll<HTMLElement>(
-          'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-        ));
-        if (focusable.length === 0) {
-          e.preventDefault();
-          panel.focus();
-          return;
-        }
-        const first = focusable[0];
-        const last = focusable[focusable.length - 1];
-        const active = document.activeElement;
-        if (e.shiftKey && (active === first || !panel.contains(active))) {
-          e.preventDefault();
-          last?.focus();
-        } else if (!e.shiftKey && (active === last || !panel.contains(active))) {
-          e.preventDefault();
-          first?.focus();
-        }
-      }
-    };
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [handleClose]);
 
   const countDisplay = () => {
     if (event.occurrenceCountStatus === 'valid') {
@@ -111,23 +83,16 @@ export const DetailPanel: React.FC<DetailPanelProps> = ({ event, onClose, trigge
   })();
 
   return (
-    <div
-      className="detail-overlay"
-      onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
-      data-testid="detail-panel-overlay"
-      role="presentation"
+    <dialog
+      className="detail-panel"
+      ref={panelRef}
+      onClose={handleDialogClose}
+      data-testid="detail-panel"
+      aria-labelledby="event-detail-title"
     >
-      <div
-        className="detail-panel"
-        ref={panelRef}
-        data-testid="detail-panel"
-        role="dialog"
-        aria-modal="true"
-        aria-label={`Event detail: ${event.reason ?? 'Unknown event'}`}
-      >
         <div className="detail-header">
           <div>
-            <h2 style={{ fontSize: '1.0625rem', fontWeight: '700', marginBottom: '0.25rem' }}>
+            <h2 id="event-detail-title" style={{ fontSize: '1.0625rem', fontWeight: '700', marginBottom: '0.25rem' }}>
               Event Detail
             </h2>
             {event.type && (
@@ -272,7 +237,6 @@ export const DetailPanel: React.FC<DetailPanelProps> = ({ event, onClose, trigge
             </pre>
           </div>
         </div>
-      </div>
-    </div>
+    </dialog>
   );
 };
