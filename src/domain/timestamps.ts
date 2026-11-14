@@ -28,6 +28,71 @@ export function parseIsoTimestamp(value: unknown): string | null {
   return date.toISOString();
 }
 
+/** Parses a datetime-local input as a UTC wall-clock value, independent of browser timezone. */
+export function parseUtcDateTimeLocal(value: string): number | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{1,3}))?)?$/.exec(value);
+  if (!match) return null;
+
+  const [, year, month, day, hour, minute, second = '0', fraction = ''] = match;
+  const parts = {
+    year: Number(year),
+    month: Number(month),
+    day: Number(day),
+    hour: Number(hour),
+    minute: Number(minute),
+    second: Number(second),
+    millisecond: Number(fraction.padEnd(3, '0')),
+  };
+  const date = new Date(Date.UTC(
+    parts.year,
+    parts.month - 1,
+    parts.day,
+    parts.hour,
+    parts.minute,
+    parts.second,
+    parts.millisecond
+  ));
+  if (
+    date.getUTCFullYear() !== parts.year ||
+    date.getUTCMonth() + 1 !== parts.month ||
+    date.getUTCDate() !== parts.day ||
+    date.getUTCHours() !== parts.hour ||
+    date.getUTCMinutes() !== parts.minute ||
+    date.getUTCSeconds() !== parts.second ||
+    date.getUTCMilliseconds() !== parts.millisecond
+  ) return null;
+  return date.getTime();
+}
+
+/** Parses a UTC ISO bound or a zone-less datetime-local value whose contract is UTC. */
+export function parseCustomTimeBound(value: string): number | null {
+  const localUtc = parseUtcDateTimeLocal(value);
+  if (localUtc !== null) return localUtc;
+  const iso = parseIsoTimestamp(value);
+  return iso === null ? null : new Date(iso).getTime();
+}
+
+/** Formats a UTC instant for a datetime-local field whose displayed values are explicitly UTC. */
+export function utcTimestampToDateTimeLocal(value: string): string {
+  const timestamp = parseCustomTimeBound(value);
+  return timestamp === null ? '' : new Date(timestamp).toISOString().slice(0, -1);
+}
+
+/** Builds an inclusive custom UTC range for a chart bucket. Intermediate bucket ends are exclusive. */
+export function timeBucketToUtcRange(
+  start: string,
+  end: string,
+  isLastBucket: boolean
+): TimeRangeFilter {
+  const endTime = new Date(end).getTime();
+  const inclusiveEnd = isLastBucket ? endTime : endTime - 1;
+  return {
+    preset: 'custom',
+    customStart: start,
+    customEnd: new Date(inclusiveEnd).toISOString(),
+  };
+}
+
 /**
  * Formats an ISO UTC timestamp for human display, showing local time and timezone.
  */
@@ -106,10 +171,12 @@ export function isWithinTimeRange(
   }
 
   if (timeRange.preset === 'custom') {
-    const startTime = timeRange.customStart ? new Date(timeRange.customStart).getTime() : -Infinity;
-    const endTime = timeRange.customEnd ? new Date(timeRange.customEnd).getTime() : Infinity;
+    const parsedStart = timeRange.customStart ? parseCustomTimeBound(timeRange.customStart) : null;
+    const parsedEnd = timeRange.customEnd ? parseCustomTimeBound(timeRange.customEnd) : null;
+    const startTime = timeRange.customStart ? parsedStart : -Infinity;
+    const endTime = timeRange.customEnd ? parsedEnd : Infinity;
 
-    if (Number.isNaN(startTime) || Number.isNaN(endTime)) {
+    if (startTime === null || endTime === null) {
       return false;
     }
 

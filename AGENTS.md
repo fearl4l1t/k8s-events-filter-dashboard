@@ -387,46 +387,46 @@ After each stage, run the tests relevant to that stage. Before finalizing, run t
 
 ## Current implementation progress and PRD review (14 November 2026)
 
-The supplied `1793450417719_kubernetes-events-dashboard-spec.pdf` was compared with `docs/SPEC.md`, the application source, fixtures and acceptance tests. The implementation covers the main PRD workflow: local synthetic fixtures, both Event API shapes, shared filtering and metrics, record inspection, deterministic scenarios, analytics, export, and a visible simulated-data label. The current verification run passed lint, typecheck, fixture validation, all 75 unit tests and all 17 browser tests, production build and the 500 KiB gzip bundle gate. The 2,500-record domain benchmark passed with medians of 0.053 ms for namespace/type filtering, 0.216 ms for keyword search and 0.710 ms for a bounded time filter. The benchmark measures domain functions, not end-to-end browser rendering, so it does not establish the PRD's full user-visible 250 ms responsiveness target.
+The supplied `1793450417719_kubernetes-events-dashboard-spec.pdf` was compared with `docs/SPEC.md`, the application source, fixtures and acceptance tests. The implementation covers the specified browser-only workflow. The gap review below has been addressed in code, tests and the canonical repository spec. Current verification passed lint, typecheck, fixture validation, all 78 unit tests, all 25 browser tests, production and GitHub Pages builds, coverage floors and the 500 KiB initial-JavaScript gzip gate. The 2,500-record domain benchmark passed with medians of 0.051 ms for namespace/type filtering, 0.238 ms for keyword search and 0.688 ms for a bounded time filter. This benchmark measures domain operations rather than browser rendering; describe it as the domain benchmark and do not claim it measures end-to-end interaction latency.
 
 Implementation status by stage:
 
-1. **Foundation — implemented.** Five scenario fixtures contain 1,505–1,507 seed records each; the separate core/v1 compatibility fixture contains 105 records. Fixture validation and both API-shape normalization suites pass.
-2. **Query core — implemented with gaps below.** Shared filter, sort, pagination, aggregation and export functions exist and are covered by passing tests.
-3. **Explorer and detail — implemented with gaps below.** Search, filters, chips, table, detail panel and raw JSON are present. The namespace selector currently omits one of the six namespaces in the shipped scenarios.
-4. **Simulator — implemented with a cap edge case below.** All five scenarios, speed controls, play/pause, reset confirmation and scripted steps are present; lifecycle tests pass.
-5. **Overview and analytics — implemented with a chart interaction gap below.** Metrics use the shared filtered dataset and charts have text/table summaries.
-6. **Hardening — verification gates pass, with accessibility and responsiveness limits below.** The current benchmark is a domain-only measurement. Runtime-origin checks pass in the browser suite.
-7. **Release readiness — project files, CI and deployment configuration are present.** The upstream SIG CLI work remains a separate discussion candidate; no upstream Kubernetes code belongs in this repository.
+1. **Foundation — complete.** Five scenario fixtures contain 1,505–1,507 seed records each; the separate core/v1 compatibility fixture contains 105 records. Fixture validation and both API-shape normalization suites pass.
+2. **Query core — complete.** Shared filtering, sorting, pagination, aggregation and raw-source-safe export are implemented and tested. Clear all restores the default filters, newest-first sort and first page.
+3. **Explorer and detail — complete.** All six namespaces are selectable. Search, filters, chips, table, detail panel, raw JSON, local-time provenance and keyboard focus handling are present. TC-02 now requires `payments` and checks every visible row.
+4. **Simulator — complete.** All five scenarios, speed, pause/resume, reset confirmation and scripted steps are implemented. Repeated-series updates remain allowed at the record cap; new records stop at the cap. TC-07 verifies pause stability and continuation at the next step; TC-08 verifies that reset removes an arrival.
+5. **Overview and analytics — complete.** Both volume charts support selecting a bucket and type. Accessible table actions provide the same filter path. Shared query semantics drive results and summaries.
+6. **Hardening — complete for defined checks.** Custom date inputs are UTC independent of the browser timezone and normalize to UTC ISO bounds. Dialog focus is contained, loading local fixtures is visible while the simulator module loads, invalid and empty states are implemented, runtime-origin checks pass, and the 2,500-record domain benchmark is repeatable.
+7. **Upstream exploration — separate and pending.** The SIG CLI field-selector proposal remains a discussion candidate. No upstream Kubernetes code belongs in this repository.
 
-### PRD conformance gaps to close
+### Review findings and resolution
 
-- **Namespace filter omits `payments`.** `FilterPanel.tsx` renders only `availableOptions.namespaces.slice(0, 5)`, but each main scenario has six namespaces. The alphabetical first five exclude `payments`. The TC-02 browser test silently skips the namespace selection when its checkbox is missing, so its pass does not verify the PRD's namespace combination. Render every available namespace and make TC-02 fail if the requested checkbox is absent.
-- **Clear filters leaves the table sort unchanged.** `FilterPanel.tsx` resets filters, and `ExplorerPanel.tsx` resets pagination, but neither resets `sortConfig`; the documented clear-all behavior also restores newest-first sorting.
-- **Custom range is labelled UTC but interpreted as local time.** The controls use `datetime-local` values labelled “From (UTC)” and “To (UTC)”; `timestamps.ts` parses these zone-less values with `new Date(...)`, which interprets them in the browser's local timezone. Align input semantics, labels and UTC comparison behavior, then verify under a non-UTC browser timezone.
-- **Time-volume buckets are not selectable.** The volume bars in `AnalyticsPanel.tsx` have no click action, and their accessible table provides no filter action. Type, reason and namespace breakdowns do have actions. The product requirement calls for chart-driven selection to apply equivalent filters and navigate to the explorer; the time-bucket behavior needs an explicit equivalent range action or a documented product decision.
-- **Series updates are blocked at the record cap.** `EventStore.appendEvent()` checks `MAX_IN_MEMORY_EVENTS` before determining whether the scripted item updates an existing series. At capacity, a same-record update is rejected even though it would not add a record. Apply the cap only to true appends while continuing to pause new-record appends at the limit.
-- **Modal dialogs declare modality without containing focus.** The detail panel and reset confirmation use `aria-modal="true"`, but their code does not constrain Tab focus to the dialog. Implement proper modal focus handling or adjust the interaction semantics so keyboard users are not told the background is unavailable while focus can leave the dialog.
-- **Loading state is defined but unused.** `LoadingState.tsx` exists, while fixtures are statically imported and `App.tsx` renders no loading state. The startup state required by the specification has not been demonstrated or tested.
-- **The PRD has one wording tension.** Page 3 says the dashboard finds records “that explain an incident,” while also stating the product does not diagnose root causes and an Event does not prove why a workload failed. Keep the latter limitation authoritative and revise that phrase in a future approved PRD edit to avoid implying diagnostic certainty.
+- The namespace selector no longer truncates the six shipped scenario namespaces; TC-02 fails if `payments` is missing.
+- Clear all now resets sorting and pagination as well as filters.
+- Zone-less `datetime-local` values are interpreted as UTC and stored as UTC ISO timestamps. Unit and browser checks verify the same result with a Los Angeles browser timezone.
+- Overview and Analytics time-volume segments now apply an inclusive UTC bucket range plus Normal/Warning type. Keyboard-operable summary-table actions apply the equivalent query. Intermediate bucket ends are made exclusive by ending the preceding inclusive range one millisecond earlier.
+- The record cap applies to new records; immutable updates to an existing series still work at capacity.
+- Detail and reset dialogs contain keyboard focus while open and retain Escape/return-focus behavior.
+- The app dynamically loads the bundled simulator module, displays the loading state during that load, and withholds simulator navigation/controls until initialization completes.
+- `docs/SPEC.md` follows the PDF's explicit no-diagnosis boundary and records the source wording tension. The supplied PDF is left unchanged; its “records that explain an incident” phrase remains inconsistent with its own limitation.
 
-These findings mean the verification suite is green but PRD conformance is not complete. Keep the relevant Definition of done items unchecked until the gaps are resolved and covered by tests.
+The PRD's 250 ms responsiveness statement has a passing 2,500-record domain benchmark. A browser-rendering latency benchmark has not been measured; keep that limitation explicit if reporting the performance result.
 
 ## 14. Definition of done
 
-- [ ] Requirements FR-01 to FR-10 from `docs/SPEC.md` are implemented, including export FR-09.
-- [ ] Both supported Event API shapes are normalized and tested.
-- [ ] All filters, counts, charts and exports share the same query semantics.
-- [ ] The five simulator scenarios are deterministic; pause, resume, speed and reset are tested.
-- [ ] Simulated-data label appears on every data-bearing screen.
-- [ ] Missing data is not fabricated; timestamp/count behavior follows section 6.
-- [ ] TC-01 through TC-10 and additional browser checks pass.
-- [ ] Coverage floors in `BUILD_SPEC.md` pass.
-- [ ] Lint, typecheck, fixture validation, tests, production build and bundle-size check pass.
-- [ ] Runtime requests are restricted to the same-origin bundled application assets; no telemetry or external data calls exist.
-- [ ] Performance benchmark has recorded results for 2,500 deterministic records.
+- [x] Requirements FR-01 to FR-10 from `docs/SPEC.md` are implemented, including export FR-09.
+- [x] Both supported Event API shapes are normalized and tested.
+- [x] All filters, counts, charts and exports share the same query semantics.
+- [x] The five simulator scenarios are deterministic; pause, resume, speed and reset are tested.
+- [x] Simulated-data label appears on every data-bearing screen.
+- [x] Missing data is not fabricated; timestamp/count behavior follows section 6.
+- [x] TC-01 through TC-10 and additional browser checks pass.
+- [x] Coverage floors in `BUILD_SPEC.md` pass.
+- [x] Lint, typecheck, fixture validation, tests, production build and bundle-size check pass.
+- [x] Runtime requests are restricted to the same-origin bundled application assets; no telemetry or external data calls exist.
+- [x] Performance benchmark has recorded results for 2,500 deterministic records. The measured benchmark is domain-level; browser-rendering latency is not included.
 - [ ] README steps work from a clean clone with the supported Node/npm versions.
-- [ ] License, `package-lock.json`, CI and deployment configurations are committed.
+- [x] License, `package-lock.json`, CI and deployment configurations are committed.
 
 ## 15. Explicit implementation defaults added where the PDF is silent
 

@@ -15,9 +15,9 @@ import {
   Cell,
   Legend,
 } from 'recharts';
-import type { NormalisedEvent, EventFilters } from '../../domain/types';
+import type { NormalisedEvent, EventFilters, TimeBucket } from '../../domain/types';
 import { computeAnalyticsData } from '../../domain/aggregate';
-import { formatDisplayTimestamp } from '../../domain/timestamps';
+import { formatDisplayTimestamp, timeBucketToUtcRange } from '../../domain/timestamps';
 
 interface AnalyticsPanelProps {
   events: NormalisedEvent[];
@@ -46,6 +46,12 @@ const PALETTE = [
 export const AnalyticsPanel: React.FC<AnalyticsPanelProps> = ({ events, onApplyFilter }) => {
   const [metricUnit, setMetricUnit] = useState<'events' | 'occurrences'>('events');
   const analytics = computeAnalyticsData(events);
+  const applyBucket = (bucket: TimeBucket, index: number, type: 'Normal' | 'Warning') => {
+    onApplyFilter({
+      types: [type],
+      timeRange: timeBucketToUtcRange(bucket.start, bucket.end, index === analytics.volumeBuckets.length - 1),
+    });
+  };
 
   return (
     <div data-testid="analytics-panel" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -116,12 +122,16 @@ export const AnalyticsPanel: React.FC<AnalyticsPanelProps> = ({ events, onApplyF
                 name="Normal"
                 stackId="v"
                 fill="var(--color-normal)"
+                onClick={(entry: TimeBucket, index: number) => applyBucket(entry, index, 'Normal')}
+                style={{ cursor: 'pointer' }}
               />
               <Bar
                 dataKey={metricUnit === 'events' ? 'warningCount' : 'warningOccurrenceCount'}
                 name="Warning"
                 stackId="v"
                 fill="var(--color-warning)"
+                onClick={(entry: TimeBucket, index: number) => applyBucket(entry, index, 'Warning')}
+                style={{ cursor: 'pointer' }}
               />
             </BarChart>
           </ResponsiveContainer>
@@ -132,11 +142,21 @@ export const AnalyticsPanel: React.FC<AnalyticsPanelProps> = ({ events, onApplyF
           </caption>
           <thead><tr><th scope="col">Time interval</th><th scope="col">Normal</th><th scope="col">Warning</th></tr></thead>
           <tbody>
-            {analytics.volumeBuckets.map((bucket) => (
+            {analytics.volumeBuckets.map((bucket, index) => (
               <tr key={bucket.start}>
                 <th scope="row">{formatDisplayTimestamp(bucket.start)} – {formatDisplayTimestamp(bucket.end)}</th>
-                <td>{metricUnit === 'events' ? bucket.normalCount : bucket.normalOccurrenceCount}</td>
-                <td>{metricUnit === 'events' ? bucket.warningCount : bucket.warningOccurrenceCount}</td>
+                <td>
+                  {metricUnit === 'events' ? bucket.normalCount : bucket.normalOccurrenceCount}{' '}
+                  <button type="button" className="table-action-button" onClick={() => applyBucket(bucket, index, 'Normal')}>
+                    Filter to this interval and Normal
+                  </button>
+                </td>
+                <td>
+                  {metricUnit === 'events' ? bucket.warningCount : bucket.warningOccurrenceCount}{' '}
+                  <button type="button" className="table-action-button" onClick={() => applyBucket(bucket, index, 'Warning')}>
+                    Filter to this interval and Warning
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>

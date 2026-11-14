@@ -48,18 +48,18 @@ test.describe('Kubernetes Events Filter Dashboard Acceptance Tests', () => {
 
     // Select namespace filter (payments)
     const nsCheckbox = page.getByRole('checkbox', { name: 'Namespace: payments' });
-    if (await nsCheckbox.isVisible()) {
-      await nsCheckbox.check();
-    }
+    await expect(nsCheckbox).toBeVisible();
+    await nsCheckbox.check();
 
     // Verify all rendered rows match Warning
     const rows = page.getByTestId('event-row');
     const count = await rows.count();
     expect(count).toBeGreaterThan(0);
 
-    for (let i = 0; i < Math.min(count, 5); i++) {
+    for (let i = 0; i < count; i++) {
       const rowText = await rows.nth(i).innerText();
       expect(rowText).toContain('Warning');
+      expect(rowText).toContain('payments');
     }
   });
 
@@ -140,22 +140,45 @@ test.describe('Kubernetes Events Filter Dashboard Acceptance Tests', () => {
     await expect(row).toBeFocused();
   });
 
+  test('detail dialog keeps keyboard focus within the panel', async ({ page }) => {
+    await page.getByTestId('nav-tab-explorer').click();
+    await page.getByTestId('event-row').first().click();
+    const close = page.getByTestId('detail-close-btn');
+    await expect(close).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(close).toBeFocused();
+    await page.keyboard.press('Shift+Tab');
+    await expect(close).toBeFocused();
+    await page.keyboard.press('Escape');
+  });
+
   // TC-07: Pause and resume simulator
   test('TC-07: Pause and resume simulator', async ({ page }) => {
+    await expect(page.getByTestId('stat-total')).toContainText('1,507');
+    await page.getByTestId('sim-speed-select').selectOption('4');
     const playPauseBtn = page.getByTestId('sim-play-pause-btn');
     await expect(playPauseBtn).toHaveText('Play');
 
     // Start playback
     await playPauseBtn.click();
     await expect(page.getByTestId('sim-status')).toHaveText('Running');
+    await expect(page.getByTestId('stat-total')).toContainText('1,508');
 
     // Pause playback
     await page.getByTestId('sim-play-pause-btn').click();
     await expect(page.getByTestId('sim-status')).toHaveText('Paused');
+    await page.waitForTimeout(400);
+    await expect(page.getByTestId('stat-total')).toContainText('1,508');
+
+    await page.getByTestId('sim-play-pause-btn').click();
+    await expect(page.getByTestId('stat-total')).toContainText('1,509');
   });
 
   // TC-08: Reset scenario
   test('TC-08: Reset scenario with confirmation', async ({ page }) => {
+    await page.getByTestId('sim-speed-select').selectOption('4');
+    await page.getByTestId('sim-play-pause-btn').click();
+    await expect(page.getByTestId('stat-total')).toContainText('1,508');
     const resetBtn = page.getByTestId('sim-reset-btn');
     await resetBtn.click();
 
@@ -171,7 +194,20 @@ test.describe('Kubernetes Events Filter Dashboard Acceptance Tests', () => {
     await page.keyboard.press('Enter');
 
     await expect(page.getByTestId('sim-status')).toHaveText('Idle');
+    await expect(page.getByTestId('stat-total')).toContainText('1,507');
     await expect(resetBtn).toBeFocused();
+  });
+
+  test('reset confirmation contains keyboard focus', async ({ page }) => {
+    await page.getByTestId('sim-reset-btn').click();
+    const cancel = page.getByTestId('cancel-reset-btn');
+    const confirm = page.getByTestId('confirm-reset-btn');
+    await expect(cancel).toBeFocused();
+    await page.keyboard.press('Shift+Tab');
+    await expect(confirm).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(cancel).toBeFocused();
+    await page.keyboard.press('Escape');
   });
 
   // TC-09: Export filtered events
@@ -249,6 +285,47 @@ test.describe('Kubernetes Events Filter Dashboard Acceptance Tests', () => {
     await expect(page.getByRole('table', { name: 'Top Event reasons data' })).toBeVisible();
   });
 
+  test('time bucket actions apply the exact UTC interval and type in the explorer', async ({ page }) => {
+    await page.getByTestId('nav-tab-analytics').click();
+    const firstRow = page.getByRole('table', { name: 'Event volume by time interval data' }).locator('tbody tr').first();
+    const normalCell = firstRow.locator('td').nth(0);
+    const expectedCount = Number((await normalCell.innerText()).match(/^\d+/)?.[0]);
+    await normalCell.getByRole('button', { name: 'Filter to this interval and Normal' }).click();
+    await expect(page.getByTestId('explorer-panel')).toBeVisible();
+    await expect(page.getByRole('list', { name: 'Active filters' })).toContainText('Custom range');
+    await expect(page.getByRole('list', { name: 'Active filters' })).toContainText('Type: Normal');
+    const result = await page.getByTestId('result-count').innerText();
+    const actualCount = Number(result.match(/of ([\d,]+) events/)?.[1]?.replaceAll(',', '') ?? (result.includes('No events match') ? 0 : NaN));
+    expect(actualCount).toBe(expectedCount);
+  });
+
+  test('clicking a time-volume chart segment applies its bucket filter', async ({ page }) => {
+    await page.getByTestId('nav-tab-analytics').click();
+    const rectangles = page.locator('.recharts-bar-rectangle');
+    await expect(rectangles.first()).toBeVisible();
+    let clicked = false;
+    for (let index = 0; index < await rectangles.count(); index++) {
+      const rectangle = rectangles.nth(index);
+      const bounds = await rectangle.boundingBox();
+      if (bounds && bounds.width > 0 && bounds.height > 0) {
+        await rectangle.click();
+        clicked = true;
+        break;
+      }
+    }
+    expect(clicked).toBe(true);
+    await expect(page.getByTestId('explorer-panel')).toBeVisible();
+    await expect(page.getByRole('list', { name: 'Active filters' })).toContainText('Custom range');
+  });
+
+  test('custom range inputs represent UTC independently of browser timezone', async ({ page }) => {
+    await page.getByTestId('nav-tab-explorer').click();
+    await page.getByLabel('Time range').selectOption('custom');
+    await page.getByLabel('Custom range start').fill('2026-11-14T10:00');
+    await page.getByLabel('Custom range end').fill('2026-11-14T23:59');
+    await expect(page.getByTestId('result-count')).toContainText('1506 events');
+  });
+
   test('chart filter alternatives work by keyboard and preserve shared filters', async ({ page }) => {
     await page.getByTestId('nav-tab-analytics').click();
     const reasonFilter = page.getByRole('button', { name: /Filter Explorer to reason Scheduled/i }).first();
@@ -280,4 +357,36 @@ test.describe('Kubernetes Events Filter Dashboard Acceptance Tests', () => {
     await page.keyboard.press('Enter');
     await expect(page.getByRole('columnheader', { name: /Namespace/ })).toHaveAttribute('aria-sort', 'ascending');
   });
+
+  test('Clear filters restores newest-first sorting', async ({ page }) => {
+    await page.getByTestId('nav-tab-explorer').click();
+    await page.getByRole('button', { name: 'Sort by Namespace' }).click();
+    await expect(page.getByRole('columnheader', { name: /Namespace/ })).toHaveAttribute('aria-sort', 'ascending');
+    await page.getByTestId('type-filter-warning').check();
+    await page.getByRole('button', { name: 'Clear all filters' }).click();
+    await expect(page.getByRole('columnheader', { name: /Timestamp/ })).toHaveAttribute('aria-sort', 'descending');
+  });
+});
+
+test.describe('Browser timezone independence', () => {
+  test.use({ timezoneId: 'America/Los_Angeles' });
+
+  test('UTC custom bounds select the same data in a non-UTC timezone', async ({ page }) => {
+    await page.goto('/');
+    await page.getByTestId('nav-tab-explorer').click();
+    await page.getByLabel('Time range').selectOption('custom');
+    await page.getByLabel('Custom range start').fill('2026-11-14T10:00');
+    await page.getByLabel('Custom range end').fill('2026-11-14T23:59');
+    await expect(page.getByTestId('result-count')).toContainText('1506 events');
+  });
+});
+
+test('loading state is shown while bundled simulator fixtures load', async ({ page }) => {
+  await page.route('**/src/store/simulator.ts*', async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    await route.continue();
+  });
+  await page.goto('/');
+  await expect(page.getByTestId('loading-state')).toBeVisible();
+  await expect(page.getByTestId('overview-panel')).toBeVisible();
 });

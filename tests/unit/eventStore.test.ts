@@ -142,6 +142,19 @@ describe('EventStore', () => {
     expect(store.getEvents().length).toBe(MAX_IN_MEMORY_EVENTS);
     expect(store.isLimitReached()).toBe(false);
 
+    const seriesUpdate = store.appendEvent(
+      {
+        apiVersion: 'events.k8s.io/v1',
+        metadata: { uid: 'event-0' },
+        series: { count: 8, lastObservedTime: '2026-11-14T10:30:00Z' },
+      },
+      true
+    );
+    expect(seriesUpdate).toBe(true);
+    expect(store.getEvents().length).toBe(MAX_IN_MEMORY_EVENTS);
+    expect(store.getEvents()[0]?.occurrenceCount).toBe(8);
+    expect(store.isLimitReached()).toBe(false);
+
     // Try to append one more
     const success = store.appendEvent({
       apiVersion: 'events.k8s.io/v1',

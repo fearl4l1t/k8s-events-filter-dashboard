@@ -61,6 +61,29 @@ export const DetailPanel: React.FC<DetailPanelProps> = ({ event, onClose, trigge
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         handleClose();
+        return;
+      }
+      if (e.key === 'Tab') {
+        const panel = panelRef.current;
+        if (!panel) return;
+        const focusable = Array.from(panel.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        ));
+        if (focusable.length === 0) {
+          e.preventDefault();
+          panel.focus();
+          return;
+        }
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        const active = document.activeElement;
+        if (e.shiftKey && (active === first || !panel.contains(active))) {
+          e.preventDefault();
+          last?.focus();
+        } else if (!e.shiftKey && (active === last || !panel.contains(active))) {
+          e.preventDefault();
+          first?.focus();
+        }
       }
     };
     document.addEventListener('keydown', handleKeyDown);

@@ -48,6 +48,8 @@ The explorer is the central workflow. Users can combine namespace, type, reason,
 
 This project studies Event inspection and filtering. It does not diagnose root causes and must not claim that an Event alone proves why a workload failed. Kubernetes Events are best-effort supplemental information with limited retention; the sample time range must never be presented as a complete or permanent audit history.
 
+Source interpretation: the supplied proposed PRD v1.0 uses the phrase “records that explain an incident” in its problem statement, then explicitly rules out diagnosis and claims that an Event proves a failure's cause. This canonical specification follows the explicit non-diagnostic constraint; the dashboard helps users inspect records relevant to an incident without asserting that they explain its cause.
+
 ## 2. Kubernetes baseline and evidence
 
 The dashboard is a separate simulated interface. It is not a replacement for `kubectl` and does not implement Kubernetes API behavior.
@@ -169,7 +171,7 @@ Show:
 - Top reasons.
 - Namespace counts.
 
-Chart segments and reason selections are controls, not decorative pictures: selecting one applies the equivalent filter in the explorer. Labels state the selected time interval and whether counts refer to Event objects or recorded occurrences. A series with 50 occurrences is still one Event record.
+Chart segments and reason selections are controls, not decorative pictures: selecting one applies the equivalent filter in the explorer. Selecting a Normal or Warning time-volume segment applies that type together with the bucket's exact inclusive UTC time range. Every chart action has a keyboard-operable equivalent in its summary table. Labels state the selected time interval and whether counts refer to Event objects or recorded occurrences. A series with 50 occurrences is still one Event record.
 
 ### 5.5 Required interface states
 
@@ -209,6 +211,8 @@ Example:
 `Namespace = payments AND Type = Warning AND (Reason = BackOff OR Reason = Failed) AND last observed within the last hour`
 
 The same query semantics must drive the table rows, result count, charts, summary metrics and both export formats.
+
+Custom date/time fields are explicitly entered as UTC, regardless of the browser's timezone. Store their bounds as UTC ISO timestamps and compare them as UTC instants. The timestamp values shown elsewhere in the interface remain localized with a visible timezone.
 
 ### 6.3 Sorting
 

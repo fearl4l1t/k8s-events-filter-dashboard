@@ -4,11 +4,16 @@
 import React, { useState } from 'react';
 import type { EventFilters, TimeRangePreset } from '../../domain/types';
 import type { AvailableFilterOptions } from '../../domain/filters';
-import { DEFAULT_FILTERS } from '../../domain/constants';
+import {
+  parseCustomTimeBound,
+  parseUtcDateTimeLocal,
+  utcTimestampToDateTimeLocal,
+} from '../../domain/timestamps';
 
 interface FilterPanelProps {
   filters: EventFilters;
   onFiltersChange: (filters: EventFilters) => void;
+  onClearAll: () => void;
   availableOptions: AvailableFilterOptions;
   keywordInputRef?: React.RefObject<HTMLInputElement | null>;
 }
@@ -93,6 +98,7 @@ const TIME_RANGE_OPTIONS: { value: TimeRangePreset; label: string }[] = [
 export const FilterPanel: React.FC<FilterPanelProps> = ({
   filters,
   onFiltersChange,
+  onClearAll,
   availableOptions,
   keywordInputRef,
 }) => {
@@ -101,6 +107,15 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
   const chips = buildChips(filters);
   const hasActiveFilters =
     chips.length > 0;
+  const customStartTime = filters.timeRange.customStart
+    ? parseCustomTimeBound(filters.timeRange.customStart)
+    : null;
+  const customEndTime = filters.timeRange.customEnd
+    ? parseCustomTimeBound(filters.timeRange.customEnd)
+    : null;
+  const invalidCustomRange = (filters.timeRange.customStart != null && customStartTime === null) ||
+    (filters.timeRange.customEnd != null && customEndTime === null) ||
+    (customStartTime !== null && customEndTime !== null && customStartTime > customEndTime);
 
   function handleKeywordChange(e: React.ChangeEvent<HTMLInputElement>) {
     onFiltersChange({ ...filters, searchKeyword: e.target.value });
@@ -115,21 +130,25 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
   }
 
   function handleCustomStartChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const value = e.target.value;
+    const timestamp = value ? parseUtcDateTimeLocal(value) : null;
     onFiltersChange({
       ...filters,
       timeRange: {
         ...filters.timeRange,
-        customStart: e.target.value || null,
+        customStart: timestamp === null ? value || null : new Date(timestamp).toISOString(),
       },
     });
   }
 
   function handleCustomEndChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const value = e.target.value;
+    const timestamp = value ? parseUtcDateTimeLocal(value) : null;
     onFiltersChange({
       ...filters,
       timeRange: {
         ...filters.timeRange,
-        customEnd: e.target.value || null,
+        customEnd: timestamp === null ? value || null : new Date(timestamp).toISOString(),
       },
     });
   }
@@ -164,10 +183,6 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
 
   function handleReporterChange(e: React.ChangeEvent<HTMLSelectElement>) {
     onFiltersChange({ ...filters, reporter: e.target.value || null });
-  }
-
-  function handleClearFilters() {
-    onFiltersChange(DEFAULT_FILTERS);
   }
 
   function handleRemoveChip(chip: { key: string; label: string }) {
@@ -216,7 +231,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
               role="group"
               aria-label="Namespace filter"
             >
-              {availableOptions.namespaces.slice(0, 5).map((ns) => (
+              {availableOptions.namespaces.map((ns) => (
                 <label
                   key={ns}
                   style={{
@@ -273,7 +288,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
         {hasActiveFilters && (
           <button
             className="sim-btn"
-            onClick={handleClearFilters}
+            onClick={onClearAll}
             aria-label="Clear all filters"
             data-testid="clear-filters-btn"
           >
@@ -301,8 +316,9 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
             <input
               id="custom-start"
               type="datetime-local"
+              step="0.001"
               className="filter-select"
-              value={filters.timeRange.customStart ?? ''}
+              value={filters.timeRange.customStart ? utcTimestampToDateTimeLocal(filters.timeRange.customStart) : ''}
               onChange={handleCustomStartChange}
               aria-label="Custom range start"
             />
@@ -314,12 +330,18 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
             <input
               id="custom-end"
               type="datetime-local"
+              step="0.001"
               className="filter-select"
-              value={filters.timeRange.customEnd ?? ''}
+              value={filters.timeRange.customEnd ? utcTimestampToDateTimeLocal(filters.timeRange.customEnd) : ''}
               onChange={handleCustomEndChange}
               aria-label="Custom range end"
             />
           </div>
+          <p role={invalidCustomRange ? 'alert' : 'note'} className="state-description">
+            {invalidCustomRange
+              ? 'Invalid time range. Enter valid UTC values and ensure the start is not after the end.'
+              : 'Enter UTC date and time values. The range includes both endpoints.'}
+          </p>
         </div>
       )}
 

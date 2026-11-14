@@ -72,6 +72,7 @@ export const Header: React.FC<HeaderProps> = ({
   const [showResetModal, setShowResetModal] = useState(false);
   const resetButtonRef = useRef<HTMLButtonElement>(null);
   const cancelResetRef = useRef<HTMLButtonElement>(null);
+  const resetDialogRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!showResetModal) return;
@@ -80,6 +81,24 @@ export const Header: React.FC<HeaderProps> = ({
       if (event.key === 'Escape') {
         setShowResetModal(false);
         resetButtonRef.current?.focus();
+        return;
+      }
+      if (event.key === 'Tab') {
+        const dialog = resetDialogRef.current;
+        if (!dialog) return;
+        const focusable = Array.from(dialog.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        ));
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        const active = document.activeElement;
+        if (event.shiftKey && (active === first || !dialog.contains(active))) {
+          event.preventDefault();
+          last?.focus();
+        } else if (!event.shiftKey && (active === last || !dialog.contains(active))) {
+          event.preventDefault();
+          first?.focus();
+        }
       }
     };
     document.addEventListener('keydown', handleEscape);
@@ -238,7 +257,7 @@ export const Header: React.FC<HeaderProps> = ({
           aria-labelledby="reset-modal-title"
           aria-describedby="reset-modal-desc"
         >
-          <div className="modal-content">
+          <div className="modal-content" ref={resetDialogRef}>
             <h2 id="reset-modal-title" style={{ fontSize: '1rem', fontWeight: 700 }}>
               Reset Scenario
             </h2>

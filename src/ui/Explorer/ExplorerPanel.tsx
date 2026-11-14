@@ -3,7 +3,7 @@
 
 import React, { useMemo, useCallback } from 'react';
 import type { EventFilters, SortConfig, SortField, NormalisedEvent } from '../../domain/types';
-import { DEFAULT_FILTERS } from '../../domain/constants';
+import { DEFAULT_FILTERS, DEFAULT_SORT } from '../../domain/constants';
 import { extractFilterOptions } from '../../domain/filters';
 import { sortEvents } from '../../domain/sort';
 import { paginateEvents } from '../../domain/paginate';
@@ -61,6 +61,12 @@ export const ExplorerPanel: React.FC<ExplorerPanelProps> = ({
     [onFiltersChange, onPageChange]
   );
 
+  const handleClearAll = useCallback(() => {
+    onFiltersChange(DEFAULT_FILTERS);
+    onSortChange(DEFAULT_SORT);
+    onPageChange(1);
+  }, [onFiltersChange, onSortChange, onPageChange]);
+
   const handleSortChange = useCallback(
     (field: SortField) => {
       let newDirection: SortConfig['direction'] = 'asc';
@@ -93,6 +99,7 @@ export const ExplorerPanel: React.FC<ExplorerPanelProps> = ({
       <FilterPanel
         filters={filters}
         onFiltersChange={handleFiltersChange}
+        onClearAll={handleClearAll}
         availableOptions={availableOptions}
         keywordInputRef={keywordInputRef}
       />
@@ -138,7 +145,7 @@ export const ExplorerPanel: React.FC<ExplorerPanelProps> = ({
           <button
             type="button"
             className="sim-btn sim-btn-primary"
-            onClick={() => handleFiltersChange(DEFAULT_FILTERS)}
+            onClick={handleClearAll}
             data-testid="clear-all-btn"
           >
             Clear all filters

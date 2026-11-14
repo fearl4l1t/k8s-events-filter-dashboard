@@ -11,19 +11,26 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from 'recharts';
-import type { NormalisedEvent } from '../../domain/types';
+import type { EventFilters, NormalisedEvent, TimeBucket } from '../../domain/types';
 import { computeOverviewMetrics } from '../../domain/aggregate';
-import { formatCompactTimestamp } from '../../domain/timestamps';
+import { formatCompactTimestamp, timeBucketToUtcRange } from '../../domain/timestamps';
 import { NOT_SUPPLIED } from '../../domain/constants';
 import { formatDisplayTimestamp } from '../../domain/timestamps';
 
 interface OverviewPanelProps {
   events: NormalisedEvent[];
   onSelectEvent: (id: string, origin: HTMLElement) => void;
+  onApplyFilter: (partialFilter: Partial<EventFilters>) => void;
 }
 
-export const OverviewPanel: React.FC<OverviewPanelProps> = ({ events, onSelectEvent }) => {
+export const OverviewPanel: React.FC<OverviewPanelProps> = ({ events, onSelectEvent, onApplyFilter }) => {
   const metrics = computeOverviewMetrics(events);
+  const applyBucket = (bucket: TimeBucket, index: number, type: 'Normal' | 'Warning') => {
+    onApplyFilter({
+      types: [type],
+      timeRange: timeBucketToUtcRange(bucket.start, bucket.end, index === metrics.volumeBuckets.length - 1),
+    });
+  };
 
   return (
     <div data-testid="overview-panel" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -96,19 +103,33 @@ export const OverviewPanel: React.FC<OverviewPanelProps> = ({ events, onSelectEv
                   fontSize: '0.8125rem',
                 }}
               />
-              <Bar dataKey="normalCount" name="Normal" stackId="a" fill="var(--color-normal)" />
-              <Bar dataKey="warningCount" name="Warning" stackId="a" fill="var(--color-warning)" />
+              <Bar
+                dataKey="normalCount"
+                name="Normal"
+                stackId="a"
+                fill="var(--color-normal)"
+                onClick={(entry: TimeBucket, index: number) => applyBucket(entry, index, 'Normal')}
+                style={{ cursor: 'pointer' }}
+              />
+              <Bar
+                dataKey="warningCount"
+                name="Warning"
+                stackId="a"
+                fill="var(--color-warning)"
+                onClick={(entry: TimeBucket, index: number) => applyBucket(entry, index, 'Warning')}
+                style={{ cursor: 'pointer' }}
+              />
             </BarChart>
           </ResponsiveContainer>
         )}
         <table className="chart-summary-table" aria-label="Overview event volume data">
           <caption>Event objects by time interval; records with invalid effective timestamps are excluded.</caption>
           <thead><tr><th scope="col">Time interval</th><th scope="col">Normal Event objects</th><th scope="col">Warning Event objects</th></tr></thead>
-          <tbody>{metrics.volumeBuckets.map((bucket) => (
+          <tbody>{metrics.volumeBuckets.map((bucket, index) => (
             <tr key={bucket.start}>
               <th scope="row">{formatDisplayTimestamp(bucket.start)} – {formatDisplayTimestamp(bucket.end)}</th>
-              <td>{bucket.normalCount}</td>
-              <td>{bucket.warningCount}</td>
+              <td>{bucket.normalCount} <button type="button" className="table-action-button" onClick={() => applyBucket(bucket, index, 'Normal')}>Filter to this interval and Normal</button></td>
+              <td>{bucket.warningCount} <button type="button" className="table-action-button" onClick={() => applyBucket(bucket, index, 'Warning')}>Filter to this interval and Warning</button></td>
             </tr>
           ))}</tbody>
         </table>

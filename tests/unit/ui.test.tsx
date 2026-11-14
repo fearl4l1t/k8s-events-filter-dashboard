@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { render, screen, fireEvent, cleanup } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
 import { SimulatedBanner } from '../../src/ui/SimulatedBanner';
 import { LoadingState } from '../../src/ui/states/LoadingState';
 import { EmptyDatasetState } from '../../src/ui/states/EmptyDatasetState';
@@ -118,6 +118,10 @@ describe('UI Components', () => {
     // Reset button opens confirmation dialog
     fireEvent.click(screen.getByTestId('sim-reset-btn'));
     expect(screen.getByTestId('confirm-reset-btn')).toBeDefined();
+    fireEvent.keyDown(document, { key: 'Tab', shiftKey: true });
+    expect(document.activeElement).toBe(screen.getByTestId('confirm-reset-btn'));
+    fireEvent.keyDown(document, { key: 'Tab' });
+    expect(document.activeElement).toBe(screen.getByTestId('cancel-reset-btn'));
     fireEvent.click(screen.getByTestId('confirm-reset-btn'));
     expect(onReset).toHaveBeenCalled();
   });
@@ -129,6 +133,10 @@ describe('UI Components', () => {
     expect(screen.getByTestId('detail-panel')).toBeDefined();
     expect(screen.getByText('Back-off pulling image auth:v1')).toBeDefined();
     expect(screen.getByTestId('occurrence-count-display')).toBeDefined();
+    fireEvent.keyDown(document, { key: 'Tab' });
+    expect(document.activeElement).toBe(screen.getByTestId('detail-close-btn'));
+    fireEvent.keyDown(document, { key: 'Tab', shiftKey: true });
+    expect(document.activeElement).toBe(screen.getByTestId('detail-close-btn'));
 
     // Close button
     fireEvent.click(screen.getByTestId('detail-close-btn'));
@@ -161,11 +169,16 @@ describe('UI Components', () => {
 
   it('renders OverviewPanel and lists recent warnings', () => {
     const onSelectEvent = vi.fn();
-    render(<OverviewPanel events={[mockEvent]} onSelectEvent={onSelectEvent} />);
+    const onApplyFilter = vi.fn();
+    render(<OverviewPanel events={[mockEvent]} onSelectEvent={onSelectEvent} onApplyFilter={onApplyFilter} />);
 
     expect(screen.getByTestId('overview-panel')).toBeDefined();
     expect(screen.getByTestId('stat-total')).toBeDefined();
     expect(screen.getByTestId('stat-warnings')).toBeDefined();
+    const warningBucketButton = screen.getAllByRole('button', { name: 'Filter to this interval and Warning' })[0];
+    expect(warningBucketButton).toBeDefined();
+    if (warningBucketButton) fireEvent.click(warningBucketButton);
+    expect(onApplyFilter).toHaveBeenCalledWith(expect.objectContaining({ types: ['Warning'] }));
   });
 
   it('renders FilterPanel and triggers filter changes', () => {
@@ -174,6 +187,7 @@ describe('UI Components', () => {
       <FilterPanel
         filters={DEFAULT_FILTERS}
         onFiltersChange={onFiltersChange}
+        onClearAll={vi.fn()}
         availableOptions={{
           namespaces: ['default', 'payments'],
           reasons: ['BackOff', 'Scheduled'],
@@ -192,6 +206,26 @@ describe('UI Components', () => {
     const warnCheckbox = screen.getByTestId('type-filter-warning');
     fireEvent.click(warnCheckbox);
     expect(onFiltersChange).toHaveBeenCalled();
+  });
+
+  it('stores custom range input as UTC ISO timestamps', () => {
+    const onFiltersChange = vi.fn();
+    const props = {
+      onFiltersChange,
+      onClearAll: vi.fn(),
+      availableOptions: { namespaces: [], reasons: [], resourceKinds: [], reporters: [] },
+    };
+    const { rerender } = render(<FilterPanel filters={DEFAULT_FILTERS} {...props} />);
+    fireEvent.change(screen.getByLabelText('Time range'), { target: { value: 'custom' } });
+    const customFilters = {
+      ...DEFAULT_FILTERS,
+      timeRange: { preset: 'custom' as const, customStart: null, customEnd: null },
+    };
+    rerender(<FilterPanel filters={customFilters} {...props} />);
+    fireEvent.change(screen.getByLabelText('Custom range start'), { target: { value: '2026-11-14T10:30' } });
+    expect(onFiltersChange).toHaveBeenLastCalledWith(expect.objectContaining({
+      timeRange: expect.objectContaining({ customStart: '2026-11-14T10:30:00.000Z' }),
+    }));
   });
 
   it('renders EventTable and handles sorting and row selection', () => {
@@ -233,11 +267,17 @@ describe('UI Components', () => {
     expect(screen.getByRole('table', { name: 'Event volume by time interval data' })).toBeDefined();
     fireEvent.click(screen.getByRole('button', { name: /Filter Explorer to reason BackOff/i }));
     expect(onApplyFilter).toHaveBeenCalledWith({ reasons: ['BackOff'] });
+    const normalBucketButton = screen.getAllByRole('button', { name: 'Filter to this interval and Normal' })[0];
+    expect(normalBucketButton).toBeDefined();
+    if (normalBucketButton) fireEvent.click(normalBucketButton);
+    expect(onApplyFilter).toHaveBeenCalledWith(expect.objectContaining({ types: ['Normal'], timeRange: expect.objectContaining({ preset: 'custom' }) }));
   });
 
-  it('renders full App and navigates across tabs and controls', () => {
+  it('loads local fixtures then navigates across tabs and controls', async () => {
     render(<App />);
     expect(screen.getByTestId('app-container')).toBeDefined();
+    expect(screen.getByTestId('loading-state')).toBeDefined();
+    await waitFor(() => expect(screen.getByTestId('overview-panel')).toBeDefined());
 
     // Switch to Explorer
     fireEvent.click(screen.getByTestId('nav-tab-explorer'));
@@ -307,6 +347,7 @@ describe('UI Components', () => {
 
   it('interacts with secondary filters and chips in FilterPanel', () => {
     const onFiltersChange = vi.fn();
+    const onClearAll = vi.fn();
     const activeFilters = {
       ...DEFAULT_FILTERS,
       namespaces: ['payments'],
@@ -321,6 +362,7 @@ describe('UI Components', () => {
       <FilterPanel
         filters={activeFilters}
         onFiltersChange={onFiltersChange}
+        onClearAll={onClearAll}
         availableOptions={{
           namespaces: ['default', 'payments'],
           reasons: ['BackOff', 'Scheduled'],
@@ -336,6 +378,6 @@ describe('UI Components', () => {
 
     // Clear filters button
     fireEvent.click(screen.getByTestId('clear-filters-btn'));
-    expect(onFiltersChange).toHaveBeenCalled();
+    expect(onClearAll).toHaveBeenCalled();
   });
 });

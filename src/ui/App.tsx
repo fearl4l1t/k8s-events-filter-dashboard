@@ -3,8 +3,8 @@
 
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { EventStore } from '../store/eventStore';
-import { Simulator, type SimulatorState } from '../store/simulator';
-import { DEFAULT_FILTERS, DEFAULT_SORT } from '../domain/constants';
+import type { Simulator, SimulatorState } from '../store/simulator';
+import { DEFAULT_FILTERS, DEFAULT_SIMULATOR_SPEED, DEFAULT_SORT } from '../domain/constants';
 import type { EventFilters, SortConfig, NormalisedEvent, ScenarioId } from '../domain/types';
 import { Header } from './Header';
 import { SimulatedBanner } from './SimulatedBanner';
@@ -13,42 +13,72 @@ import { ExplorerPanel } from './Explorer/ExplorerPanel';
 import { AnalyticsPanel } from './Analytics/AnalyticsPanel';
 import { DetailPanel } from './DetailPanel/DetailPanel';
 import { EmptyDatasetState } from './states/EmptyDatasetState';
+import { LoadingState } from './states/LoadingState';
 import { filterEvents } from '../domain/filters';
 
 export const App: React.FC = () => {
   const store = useMemo(() => new EventStore(), []);
-  const simulator = useMemo(() => new Simulator(store, 'normal-rollout'), [store]);
+  const simulatorRef = useRef<Simulator | null>(null);
 
   const [activeTab, setActiveTab] = useState<'overview' | 'explorer' | 'analytics'>('overview');
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [filters, setFilters] = useState<EventFilters>(DEFAULT_FILTERS);
   const [sortConfig, setSortConfig] = useState<SortConfig>(DEFAULT_SORT);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(true);
 
   const [storeEvents, setStoreEvents] = useState<readonly NormalisedEvent[]>(() => store.getEvents());
   const [scenarioClock, setScenarioClock] = useState<string | null>(() => store.getScenarioClock());
-  const [simState, setSimState] = useState<SimulatorState>(() => simulator.getState());
+  const [simState, setSimState] = useState<SimulatorState>({
+    status: 'idle',
+    activeScenarioId: 'normal-rollout',
+    speed: DEFAULT_SIMULATOR_SPEED,
+    currentStepIndex: 0,
+    totalSteps: 0,
+    scenarioName: 'Normal rollout',
+    scenarioDescription: '',
+  });
+  const [availableScenarios, setAvailableScenarios] = useState<readonly {
+    id: ScenarioId;
+    name: string;
+    description: string;
+  }[]>([]);
   const detailTriggerRef = useRef<HTMLElement | null>(null);
   const explorerTabRef = useRef<HTMLButtonElement | null>(null);
   const explorerPrimaryRef = useRef<HTMLInputElement | null>(null);
   const focusExplorerAfterChart = useRef(false);
 
   useEffect(() => {
-    const unsubStore = store.subscribe(() => {
+    let cancelled = false;
+    let unsubscribeStore: (() => void) | null = null;
+    let unsubscribeSimulator: (() => void) | null = null;
+    let activeSimulator: Simulator | null = null;
+
+    void import('../store/simulator').then(({ Simulator: SimulatorClass }) => {
+      if (cancelled) return;
+      activeSimulator = new SimulatorClass(store, 'normal-rollout');
+      simulatorRef.current = activeSimulator;
+      unsubscribeStore = store.subscribe(() => {
+        setStoreEvents(store.getEvents());
+        setScenarioClock(store.getScenarioClock());
+      });
+      unsubscribeSimulator = activeSimulator.subscribe(setSimState);
+      setAvailableScenarios(activeSimulator.getAvailableScenarios());
       setStoreEvents(store.getEvents());
       setScenarioClock(store.getScenarioClock());
-    });
-
-    const unsubSim = simulator.subscribe((state) => {
-      setSimState(state);
+      setIsLoading(false);
+    }).catch(() => {
+      if (!cancelled) setIsLoading(false);
     });
 
     return () => {
-      unsubStore();
-      unsubSim();
-      simulator.destroy();
+      cancelled = true;
+      unsubscribeStore?.();
+      unsubscribeSimulator?.();
+      activeSimulator?.destroy();
+      simulatorRef.current = null;
     };
-  }, [store, simulator]);
+  }, [store]);
 
   useEffect(() => {
     if (activeTab === 'explorer' && focusExplorerAfterChart.current) {
@@ -85,41 +115,45 @@ export const App: React.FC = () => {
   }, []);
 
   const handleScenarioSelect = useCallback((id: ScenarioId) => {
-    simulator.selectScenario(id);
+    simulatorRef.current?.selectScenario(id);
     setSelectedEventId(null);
     setCurrentPage(1);
-  }, [simulator]);
+  }, []);
 
   const handleReset = useCallback(() => {
-    simulator.reset();
+    simulatorRef.current?.reset();
     setSelectedEventId(null);
     setCurrentPage(1);
-  }, [simulator]);
+  }, []);
 
   return (
     <div className="app-container" data-testid="app-container">
-      <Header
-        explorerTabRef={explorerTabRef}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        simulatorStatus={simState.status}
-        scenarioName={simState.scenarioName}
-        activeScenarioId={simState.activeScenarioId}
-        speed={simState.speed}
-        currentStepIndex={simState.currentStepIndex}
-        totalSteps={simState.totalSteps}
-        availableScenarios={simulator.getAvailableScenarios()}
-        onPlay={() => simulator.play()}
-        onPause={() => simulator.pause()}
-        onReset={handleReset}
-        onSelectScenario={handleScenarioSelect}
-        onSetSpeed={(s) => simulator.setSpeed(s)}
-      />
+      {!isLoading && (
+        <Header
+          explorerTabRef={explorerTabRef}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          simulatorStatus={simState.status}
+          scenarioName={simState.scenarioName}
+          activeScenarioId={simState.activeScenarioId}
+          speed={simState.speed}
+          currentStepIndex={simState.currentStepIndex}
+          totalSteps={simState.totalSteps}
+          availableScenarios={availableScenarios}
+          onPlay={() => simulatorRef.current?.play()}
+          onPause={() => simulatorRef.current?.pause()}
+          onReset={handleReset}
+          onSelectScenario={handleScenarioSelect}
+          onSetSpeed={(s) => simulatorRef.current?.setSpeed(s)}
+        />
+      )}
 
       <SimulatedBanner />
 
       <main className="main-content" role="main">
-        {storeEvents.length === 0 ? (
+        {isLoading ? (
+          <LoadingState />
+        ) : storeEvents.length === 0 ? (
           <EmptyDatasetState onReset={handleReset} />
         ) : (
           <>
@@ -127,6 +161,7 @@ export const App: React.FC = () => {
               <OverviewPanel
                 events={filteredEvents}
                 onSelectEvent={handleSelectRecentWarning}
+                onApplyFilter={handleApplyAnalyticsFilter}
               />
             )}
 

@@ -68,12 +68,6 @@ export class EventStore {
     isSeriesUpdate = false,
     stepIndex = 0
   ): boolean {
-    if (this.events.length >= MAX_IN_MEMORY_EVENTS) {
-      this.limitReached = true;
-      this.notify();
-      return false;
-    }
-
     const norm = normaliseEvent(rawEvent, stepIndex, `${this.activeScenarioId}-arrival`);
 
     if (isSeriesUpdate) {
@@ -101,6 +95,12 @@ export class EventStore {
         this.notify();
         return true;
       }
+    }
+
+    if (this.events.length >= MAX_IN_MEMORY_EVENTS) {
+      this.limitReached = true;
+      this.notify();
+      return false;
     }
 
     // Normal append

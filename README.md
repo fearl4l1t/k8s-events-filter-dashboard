@@ -372,17 +372,17 @@ This project studies **Event inspection and filtering**. It deliberately does **
 
 ## Roadmap
 
-**Progress:** `▓░░░░░░░░░` 14% (1 of 7 milestones)
+**Progress:** `▓▓▓▓▓▓▓▓▓░` 86% (6 of 7 milestones; implementation and acceptance checks updated 14 November 2026)
 
 - [x] Requirements and product definition (PRD v1.0)
-- [ ] Fixture set and normalization for both Event API shapes
-- [ ] Event explorer: table, search, filters, sorting, pagination and detail panel
-- [ ] Simulator with five scenarios and play, pause, speed and reset
-- [ ] Overview and analytics, with charts that agree with the shared query results
-- [ ] CSV and JSON export, empty/invalid states and accessibility pass
+- [x] Fixture set and normalization for both Event API shapes
+- [x] Event explorer: table, search, filters, sorting, pagination and detail panel
+- [x] Simulator with five scenarios and play, pause, speed and reset
+- [x] Overview and analytics, with charts that agree with the shared query results
+- [x] CSV and JSON export, empty/invalid states and keyboard accessibility checks
 - [ ] Upstream: discuss a `kubectl events` field-selector candidate with SIG CLI
 
-<sub>Update the progress bar when a milestone closes. The upstream item is a discussion candidate, not an accepted Kubernetes feature or a guaranteed pull request.</sub>
+<sub>The 2,500-record performance benchmark measures domain operations rather than browser rendering latency. The upstream item is a discussion candidate, not an accepted Kubernetes feature or a guaranteed pull request.</sub>
 
 ---
 

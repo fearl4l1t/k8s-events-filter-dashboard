@@ -7,6 +7,10 @@ import {
   formatDisplayTimestamp,
   formatCompactTimestamp,
   isWithinTimeRange,
+  parseUtcDateTimeLocal,
+  parseCustomTimeBound,
+  utcTimestampToDateTimeLocal,
+  timeBucketToUtcRange,
 } from '../../src/domain/timestamps';
 import { NOT_SUPPLIED } from '../../src/domain/constants';
 
@@ -44,6 +48,32 @@ describe('timestamps', () => {
 
       const compact = formatCompactTimestamp(valid);
       expect(compact).not.toBe(NOT_SUPPLIED);
+    });
+  });
+
+  describe('UTC datetime-local bounds', () => {
+    it('parses zone-less input as UTC regardless of the machine timezone', () => {
+      expect(parseUtcDateTimeLocal('2026-11-14T10:30')).toBe(Date.UTC(2026, 10, 14, 10, 30));
+      expect(parseUtcDateTimeLocal('2026-02-30T10:30')).toBeNull();
+      expect(parseCustomTimeBound('2026-11-14T10:30:00.000Z')).toBe(Date.UTC(2026, 10, 14, 10, 30));
+      expect(utcTimestampToDateTimeLocal('2026-11-14T10:30:00.000Z')).toBe('2026-11-14T10:30:00.000');
+    });
+
+    it('creates non-overlapping inclusive ranges from chart buckets', () => {
+      expect(timeBucketToUtcRange(
+        '2026-11-14T10:00:00.000Z',
+        '2026-11-14T10:10:00.000Z',
+        false
+      )).toEqual({
+        preset: 'custom',
+        customStart: '2026-11-14T10:00:00.000Z',
+        customEnd: '2026-11-14T10:09:59.999Z',
+      });
+      expect(timeBucketToUtcRange(
+        '2026-11-14T10:10:00.000Z',
+        '2026-11-14T10:20:00.000Z',
+        true
+      ).customStart).toBe('2026-11-14T10:10:00.000Z');
     });
   });
 
