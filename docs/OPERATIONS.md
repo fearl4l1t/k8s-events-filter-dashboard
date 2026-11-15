@@ -44,6 +44,22 @@ The chart creates:
 
 The container listens on port 8080 and exposes `/healthz` and `/readyz`.
 
+## Image
+
+`ghcr.io/lalit-contributes/k8s-events-explorer` is the default
+`image.repository`. Pushing a `v*` tag runs `.github/workflows/publish-image.yml`,
+which builds `packages/server/Dockerfile` for `linux/amd64` and
+`linux/arm64`, pushes a multi-platform manifest under the tag and `latest`, and
+attaches provenance and SBOM attestations.
+
+```bash
+docker pull ghcr.io/lalit-contributes/k8s-events-explorer:v0.2.0
+```
+
+The package inherits the repository's visibility settings; make it public if pull
+access must be anonymous. To use a private registry instead, set
+`image.repository` and create a pull secret.
+
 For team mode, create a Secret with `oidc-client-secret` and `session-secret` and
 set:
 
