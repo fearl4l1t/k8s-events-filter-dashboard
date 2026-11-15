@@ -19,41 +19,65 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
       - name: Setup Node
         uses: actions/setup-node@v6
         with:
           node-version-file: .nvmrc
-          cache: npm
+          cache: pnpm
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Lint
-        run: npm run lint
+        run: pnpm lint
 
       - name: Typecheck
-        run: npm run typecheck
-
-      - name: Validate fixtures
-        run: npm run validate:fixtures
+        run: pnpm typecheck
 
       - name: Unit tests and coverage
-        run: npm run test:coverage
-
-      - name: Install Chromium
-        run: npx playwright install --with-deps chromium
-
-      - name: Browser acceptance tests
-        run: npm run test:e2e
+        run: pnpm test:coverage
 
       - name: Production build
-        run: npm run build
+        run: pnpm build
 
       - name: Bundle-size gate
-        run: npm run check:bundle
+        run: pnpm check:bundle
 
-      - name: Benchmark (report only on shared runner)
-        run: npm run bench -- --report-only
+      - name: Benchmark
+        run: pnpm bench
+
+      - name: Install kind
+        uses: helm/kind-action@v1
+        with:
+          cluster_name: k8s-events
+          node_image: kindest/node:v1.34.0
+          wait: 120s
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Seed Events through the Kubernetes API
+        run: pnpm exec tsx scripts/seed-events.ts
+        env:
+          EVENTS_E2E_CONTEXT: kind-k8s-events
+
+      - name: Integration tests against kind
+        run: pnpm test:integration
+        env:
+          EVENTS_E2E_CONTEXT: kind-k8s-events
+
+      - name: Browser acceptance tests
+        run: pnpm test:e2e
+        env:
+          EVENTS_E2E_CONTEXT: kind-k8s-events
+
+      # Starts Keycloak through docker compose, then exercises OIDC login and
+      # per-grant authorization on port 8091.
+      - name: Team-mode browser tests
+        run: pnpm test:e2e:team
 
       - name: Upload verification reports
         if: always()
@@ -62,7 +86,9 @@ jobs:
           name: verification-reports
           if-no-files-found: ignore
           path: |
-            coverage/
+            packages/domain/coverage/
+            packages/server/coverage/
+            packages/web/coverage/
+            bench/results.json
             playwright-report/
             test-results/
-            bench/results.json

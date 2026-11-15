@@ -11,10 +11,10 @@ import globals from 'globals';
 export default tseslint.config(
   {
     ignores: [
-      'dist/**',
-      'coverage/**',
-      'playwright-report/**',
-      'test-results/**',
+      '**/dist/**',
+      '**/coverage/**',
+      '**/playwright-report/**',
+      '**/test-results/**',
       'bench/results.json',
       'node_modules/**',
     ],
@@ -37,30 +37,47 @@ export default tseslint.config(
     },
   },
   {
-    files: ['scripts/**/*.{ts,js,mjs}', 'bench/**/*.{ts,js,mjs}'],
+    files: ['packages/server/**/*.ts'],
     languageOptions: {
-      globals: {
-        ...globals.node,
-      },
+      globals: { ...globals.node },
+    },
+  },
+  {
+    files: ['**/tests/**/*.{ts,tsx}', '**/vitest.config.ts', 'packages/web/vite.config.ts'],
+    languageOptions: {
+      globals: { ...globals.node, ...globals.browser },
     },
     rules: {
       'no-console': 'off',
     },
   },
   {
-    files: ['tests/**/*.{ts,tsx}'],
+    files: ['scripts/**/*.{ts,mjs}', 'eslint.config.js'],
     languageOptions: {
-      globals: {
-        ...globals.node,
-        ...globals.browser,
-      },
+      globals: { ...globals.node },
     },
     rules: {
       'no-console': 'off',
     },
   },
   {
-    files: ['src/domain/**/*.ts'],
+    files: ['packages/web/src/**/*.{ts,tsx}'],
+    plugins: {
+      'react-hooks': reactHooks,
+      'react-refresh': reactRefresh,
+      'jsx-a11y': jsxA11y,
+    },
+    rules: {
+      ...reactHooks.configs.recommended.rules,
+      'react-refresh/only-export-components': ['error', { allowConstantExport: true }],
+      ...jsxA11y.configs.recommended.rules,
+    },
+  },
+  {
+    files: ['packages/domain/src/**/*.ts'],
+    languageOptions: {
+      globals: { ...globals.es2021 },
+    },
     rules: {
       'no-restricted-imports': [
         'error',
@@ -72,25 +89,16 @@ export default tseslint.config(
           ],
           patterns: [
             {
-              group: ['**/ui/**', '../ui/**', './ui/**'],
-              message: 'Domain layer must not import from UI layer.',
+              group: ['node:*', 'fs', 'net', 'http', 'https', 'path', 'os', 'crypto', 'child_process'],
+              message: 'Domain layer must not import Node built-ins.',
+            },
+            {
+              group: ['@k8s-events/server', '@k8s-events/web', '**/server/**', '**/web/**', '**/ui/**'],
+              message: 'Domain layer must not import from the server or UI layers.',
             },
           ],
         },
       ],
-    },
-  },
-  {
-    files: ['src/ui/**/*.{ts,tsx}'],
-    plugins: {
-      'react-hooks': reactHooks,
-      'react-refresh': reactRefresh,
-      'jsx-a11y': jsxA11y,
-    },
-    rules: {
-      ...reactHooks.configs.recommended.rules,
-      'react-refresh/only-export-components': ['error', { allowConstantExport: true }],
-      ...jsxA11y.configs.recommended.rules,
     },
   }
 );

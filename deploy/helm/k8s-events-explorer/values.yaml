@@ -1,0 +1,70 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Lalit Krishna and contributors
+
+image:
+  repository: ghcr.io/lalit-contributes/k8s-events-explorer
+  tag: "0.2.0"
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+
+# Namespaces whose Events the read-only Role may list and watch. The chart
+# renders one Role and RoleBinding per entry. An empty list watches only the
+# release namespace, which is the least-privilege default.
+watchNamespaces: []
+
+# Per-cluster in-memory record cap; the store evicts oldest records visibly.
+cacheMaxPerCluster: 100000
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: false
+  className: nginx
+  host: events.example.com
+  tlsSecretName: ""
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: "1"
+    memory: 512Mi
+
+# OIDC team mode. Leave authMode "none" for a single-operator loopback install.
+auth:
+  mode: none
+  publicUrl: ""
+  issuer: ""
+  clientId: ""
+  existingSecret: ""
+  sessionSecretKey: session-secret
+  rbac:
+    # roleGrants/userRoles/groupRoles as documented in docs/SECURITY.md.
+    roleGrants:
+      viewer:
+        - clusterId: "*"
+          namespaces: ["*"]
+    userRoles: {}
+    groupRoles: {}
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: ["ALL"]
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

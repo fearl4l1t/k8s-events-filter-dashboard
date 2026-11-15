@@ -1,49 +1,40 @@
 {
-  "name": "k8s-events-filter-dashboard",
+  "name": "k8s-events-explorer",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
+  "packageManager": "pnpm@12.9.0",
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
-    "dev": "vite --host 127.0.0.1",
-    "build": "npm run typecheck && vite build",
-    "build:pages": "npm run typecheck && vite build --base=/k8s-events-filter-dashboard/",
-    "preview": "vite preview --host 127.0.0.1",
-    "typecheck": "tsc --noEmit",
+    "dev": "pnpm --parallel --filter @k8s-events/server --filter @k8s-events/web dev",
+    "build": "pnpm -r build",
     "lint": "eslint . --max-warnings=0",
-    "validate:fixtures": "tsx scripts/validate-fixtures.ts",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage && tsx scripts/check-coverage.ts",
-    "test:e2e": "playwright test",
+    "typecheck": "tsc --noEmit -p tsconfig.json && pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "test:coverage": "pnpm -r test:coverage",
     "bench": "tsx scripts/benchmark.ts",
     "check:bundle": "node scripts/check-bundle-size.mjs",
-    "verify": "npm run lint && npm run typecheck && npm run validate:fixtures && npm run test:coverage && npm run test:e2e && npm run build && npm run check:bundle"
-  },
-  "dependencies": {
-    "react": "19.2.0",
-    "react-dom": "19.2.0",
-    "recharts": "2.15.4"
+    "verify": "pnpm lint && pnpm typecheck && pnpm test:coverage && pnpm build && pnpm check:bundle",
+    "test:integration": "vitest run --config tests/integration/vitest.config.ts",
+    "test:e2e": "playwright test",
+    "test:e2e:team": "playwright test --config playwright.team.config.ts"
   },
   "devDependencies": {
     "@eslint/js": "9.39.5",
-    "@playwright/test": "1.65.1",
-    "@testing-library/jest-dom": "7.0.1",
-    "@testing-library/react": "16.3.3",
+    "@playwright/test": "1.65.0",
     "@types/node": "26.6.6",
-    "@types/react": "19.3.0",
-    "@types/react-dom": "19.3.0",
-    "@vitejs/plugin-react": "6.3.0",
     "@vitest/coverage-v8": "5.1.0",
     "eslint": "9.39.5",
     "eslint-plugin-jsx-a11y": "6.10.2",
     "eslint-plugin-react-hooks": "7.1.1",
     "eslint-plugin-react-refresh": "0.5.7",
     "globals": "17.14.0",
-    "jsdom": "31.0.1",
     "tsx": "4.23.15",
     "typescript": "6.0.3",
     "typescript-eslint": "8.72.2",
-    "vite": "8.3.8",
-    "vitest": "5.1.0"
+    "vitest": "5.1.0",
+    "yaml": "2.9.1"
   }
 }

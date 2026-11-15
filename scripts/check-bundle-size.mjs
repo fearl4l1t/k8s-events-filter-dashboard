@@ -5,32 +5,58 @@ import fs from 'node:fs';
 import path from 'node:path';
 import zlib from 'node:zlib';
 
-const MAX_GZIP_BYTES = 500 * 1024; // 500 KiB
+const MAX_GZIP_BYTES = 300 * 1024; // 300 KiB initial JavaScript graph
+const MAX_JSON_BYTES = 10 * 1024;
 
 function getManifestPath(distDir) {
-  const p1 = path.join(distDir, '.vite', 'manifest.json');
-  if (fs.existsSync(p1)) return p1;
-  const p2 = path.join(distDir, 'manifest.json');
-  if (fs.existsSync(p2)) return p2;
-  return null;
+  const candidates = [
+    path.join(distDir, '.vite', 'manifest.json'),
+    path.join(distDir, 'manifest.json'),
+  ];
+  return candidates.find((candidate) => fs.existsSync(candidate)) ?? null;
+}
+
+function collectJsonFiles(dir, found = []) {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const fullPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      collectJsonFiles(fullPath, found);
+    } else if (entry.isFile() && entry.name.endsWith('.json')) {
+      found.push(fullPath);
+    }
+  }
+  return found;
 }
 
 function main() {
-  const distDir = path.resolve(process.cwd(), 'dist');
+  const distDir = path.resolve(process.cwd(), 'packages/web/dist');
   if (!fs.existsSync(distDir)) {
-    console.error('Error: dist directory does not exist. Run "npm run build" first.');
+    console.error('Error: packages/web/dist does not exist. Run "pnpm build" first.');
     process.exit(1);
   }
 
   const manifestPath = getManifestPath(distDir);
   if (!manifestPath) {
-    console.error('Error: Vite manifest.json not found in dist/.vite/ or dist/. Ensure build.manifest is enabled.');
+    console.error('Error: Vite manifest.json not found. Ensure build.manifest is enabled.');
+    process.exit(1);
+  }
+
+  const oversizedJson = collectJsonFiles(distDir)
+    .filter((file) => !file.endsWith('manifest.json'))
+    .map((file) => ({ file, size: fs.statSync(file).size }))
+    .filter((entry) => entry.size > MAX_JSON_BYTES);
+
+  if (oversizedJson.length > 0) {
+    for (const entry of oversizedJson) {
+      console.error(
+        `Error: ${path.relative(process.cwd(), entry.file)} is ${(entry.size / 1024).toFixed(2)} KiB and must not be bundled.`
+      );
+    }
     process.exit(1);
   }
 
   const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
 
-  // Find entry chunk
   let entryChunk = null;
   for (const item of Object.values(manifest)) {
     if (item.isEntry) {
@@ -44,7 +70,6 @@ function main() {
     process.exit(1);
   }
 
-  // Traverse imports recursively
   const jsFilesToMeasure = new Set();
 
   function collectImports(chunk) {
@@ -70,14 +95,11 @@ function main() {
   for (const relativePath of jsFilesToMeasure) {
     const fullPath = path.join(distDir, relativePath);
     if (!fs.existsSync(fullPath)) {
-      console.warn(`Warning: file not found: ${fullPath}`);
-      continue;
+      console.error(`Error: file not found: ${fullPath}`);
+      process.exit(1);
     }
-
-    const content = fs.readFileSync(fullPath);
-    const gzipped = zlib.gzipSync(content);
+    const gzipped = zlib.gzipSync(fs.readFileSync(fullPath));
     totalGzipBytes += gzipped.length;
-
     console.log(`  ${relativePath}: ${(gzipped.length / 1024).toFixed(2)} KiB (gzip)`);
   }
 
@@ -86,7 +108,7 @@ function main() {
   console.log(`\nTotal Entry JS Gzip Size: ${totalKiB} KiB / Limit: ${maxKiB} KiB`);
 
   if (totalGzipBytes > MAX_GZIP_BYTES) {
-    console.error(`FAIL: Bundle size exceeds budget of ${maxKiB} KiB!`);
+    console.error(`FAIL: Bundle size exceeds budget of ${maxKiB} KiB.`);
     process.exit(1);
   }
 

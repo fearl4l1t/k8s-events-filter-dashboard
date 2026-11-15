@@ -1,0 +1,253 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Lalit Krishna and contributors
+
+import React, { useEffect, useRef, useCallback } from 'react';
+import { NOT_SUPPLIED } from '@k8s-events/domain';
+import { formatDisplayTimestamp } from '@k8s-events/domain';
+import type { NormalisedEvent } from '@k8s-events/domain';
+
+interface DetailPanelProps {
+  event: NormalisedEvent;
+  observationStartedAt: string | null;
+  onClose: () => void;
+  triggerRef?: React.RefObject<HTMLElement | null>;
+  fallbackRef?: React.RefObject<HTMLElement | null>;
+}
+
+function FieldRow({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <>
+      <span className="detail-key">{label}</span>
+      <span className="detail-val">{value ?? NOT_SUPPLIED}</span>
+    </>
+  );
+}
+
+function TimestampSourceLabel({ source }: { source: string }) {
+  if (source === 'creationTimestamp') {
+    return (
+      <span style={{ color: '#fbbf24', fontSize: '0.7rem', marginLeft: '0.25rem' }}>
+        [fallback: creationTimestamp]
+      </span>
+    );
+  }
+  if (source === 'none') {
+    return null;
+  }
+  return (
+    <span style={{ color: '#94a3b8', fontSize: '0.7rem', marginLeft: '0.25rem' }}>
+      [from: {source}]
+    </span>
+  );
+}
+
+export const DetailPanel: React.FC<DetailPanelProps> = ({
+  event,
+  observationStartedAt,
+  onClose,
+  triggerRef,
+  fallbackRef,
+}) => {
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDialogElement>(null);
+
+  const handleClose = useCallback(() => {
+    if (panelRef.current?.open) panelRef.current.close();
+    else onClose();
+  }, [onClose]);
+
+  useEffect(() => {
+    const dialog = panelRef.current;
+    if (dialog && !dialog.open) dialog.showModal();
+  }, []);
+
+  const handleDialogClose = useCallback(() => {
+    onClose();
+    requestAnimationFrame(() => {
+      const origin = triggerRef?.current;
+      if (origin?.isConnected) origin.focus();
+      else fallbackRef?.current?.focus();
+    });
+  }, [onClose, triggerRef, fallbackRef]);
+
+  const countDisplay = () => {
+    if (event.occurrenceCountStatus === 'valid') {
+      return String(event.occurrenceCount);
+    }
+    if (event.occurrenceCountStatus === 'missing') {
+      return NOT_SUPPLIED;
+    }
+    return 'Invalid value';
+  };
+
+  const rawJsonStr = (() => {
+    try {
+      return JSON.stringify(event.rawEvent, null, 2);
+    } catch {
+      return '(Could not serialize raw event)';
+    }
+  })();
+
+  return (
+    <dialog
+      className="detail-panel"
+      ref={panelRef}
+      onClose={handleDialogClose}
+      data-testid="detail-panel"
+      aria-labelledby="event-detail-title"
+    >
+        <div className="detail-header">
+          <div>
+            <h2 id="event-detail-title" style={{ fontSize: '1.0625rem', fontWeight: '700', marginBottom: '0.25rem' }}>
+              Event Detail
+            </h2>
+            {event.type && (
+              <span className={`badge badge-${event.type.toLowerCase()}`}>{event.type}</span>
+            )}
+          </div>
+          <button
+            type="button"
+            ref={closeButtonRef}
+            className="sim-btn"
+            onClick={handleClose}
+            aria-label="Close event detail panel"
+            data-testid="detail-close-btn"
+          >
+            Close
+          </button>
+        </div>
+
+        <div className="detail-body">
+          <p className="inline-note" data-testid="detail-observation-note">
+            Observed from {event.clusterName} ({event.source}) since{' '}
+            {observationStartedAt ? formatDisplayTimestamp(observationStartedAt) : NOT_SUPPLIED}.
+            This is one recorded Kubernetes Event, not a complete history and not a cause.
+          </p>
+
+          {event.validationIssues.length > 0 && (
+            <section className="detail-section" aria-label="Record validation issues">
+              <h3 className="section-label">Data quality issues</h3>
+              <p role="alert" data-testid="invalid-record-notice">
+                This record has missing or malformed required data, or an invalid supplied value.
+                Its original source is preserved below,
+                and other Events remain available.
+              </p>
+              <ul>
+                {event.validationIssues.map((issue) => <li key={issue}>{issue}</li>)}
+              </ul>
+            </section>
+          )}
+
+          {/* Core fields */}
+          <div className="detail-section">
+            <h3 className="section-label">Event</h3>
+            <div className="detail-grid">
+              <FieldRow label="Reason" value={event.reason} />
+              <FieldRow label="Message" value={event.message} />
+              <FieldRow label="Action" value={event.action} />
+              <FieldRow label="Namespace" value={event.namespace} />
+              <FieldRow label="Cluster" value={event.clusterName} />
+              <FieldRow label="Source" value={`${event.source} (${event.clusterId})`} />
+              <FieldRow label="API Version" value={event.apiVersion} />
+            </div>
+          </div>
+
+          {/* Object reference */}
+          <div className="detail-section">
+            <h3 className="section-label">Referenced Object</h3>
+            <div className="detail-grid">
+              <FieldRow label="Kind" value={event.object.kind} />
+              <FieldRow label="Name" value={event.object.name} />
+              <FieldRow label="Namespace" value={event.object.namespace} />
+              <FieldRow label="API Version" value={event.object.apiVersion} />
+              <FieldRow label="UID" value={event.object.uid} />
+            </div>
+          </div>
+
+          {/* Timestamps */}
+          <div className="detail-section">
+            <h3 className="section-label">Timestamps</h3>
+            <div className="detail-grid">
+              <FieldRow
+                label="First observed"
+                value={
+                  <span>
+                    {event.firstObservedAt
+                      ? formatDisplayTimestamp(event.firstObservedAt)
+                      : NOT_SUPPLIED}
+                    <TimestampSourceLabel source={event.timestampSource.first} />
+                  </span>
+                }
+              />
+              <FieldRow
+                label="Last observed"
+                value={
+                  <span>
+                    {event.lastObservedAt
+                      ? formatDisplayTimestamp(event.lastObservedAt)
+                      : (
+                        <span style={{ color: '#f87171' }}>
+                          {event.timestampSource.last !== 'none'
+                            ? 'Invalid timestamp'
+                            : NOT_SUPPLIED}
+                        </span>
+                      )}
+                    <TimestampSourceLabel source={event.timestampSource.last} />
+                    {!event.timestampValid && event.timestampSource.last !== 'none' && (
+                      <span style={{ color: '#f87171', fontSize: '0.7rem', marginLeft: '0.25rem' }}>
+                        [invalid - excluded from time filters]
+                      </span>
+                    )}
+                  </span>
+                }
+              />
+              <FieldRow
+                label="Created at"
+                value={event.createdAt ? formatDisplayTimestamp(event.createdAt) : NOT_SUPPLIED}
+              />
+              <FieldRow
+                label="Timestamp valid"
+                value={
+                  <span style={{ color: event.timestampValid ? 'var(--color-normal)' : 'var(--color-danger)' }}>
+                    {event.timestampValid ? 'Yes' : 'No (excluded from bounded time filters)'}
+                  </span>
+                }
+              />
+            </div>
+          </div>
+
+          {/* Occurrences */}
+          <div className="detail-section">
+            <h3 className="section-label">Occurrences</h3>
+            <div className="detail-grid">
+              <FieldRow
+                label="Occurrence count"
+                value={
+                  <span data-testid="occurrence-count-display">
+                    {countDisplay()}
+                    {event.occurrenceCountStatus !== 'valid' && (
+                      <span style={{ color: '#94a3b8', fontSize: '0.7rem', marginLeft: '0.25rem' }}>
+                        [{event.occurrenceCountStatus}]
+                      </span>
+                    )}
+                  </span>
+                }
+              />
+              <FieldRow label="Reporter" value={event.reporter} />
+            </div>
+          </div>
+
+          {/* Raw JSON */}
+          <div className="detail-section">
+            <h3 className="section-label">Raw JSON (untouched source record)</h3>
+            <pre
+              className="raw-json-box"
+              data-testid="raw-json-display"
+            >
+              {rawJsonStr}
+            </pre>
+          </div>
+        </div>
+    </dialog>
+  );
+};

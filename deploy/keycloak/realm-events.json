@@ -1,0 +1,78 @@
+{
+  "realm": "events",
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "accessTokenLifespan": 300,
+  "roles": {
+    "realm": [
+      {
+        "name": "team-a",
+        "description": "Reads the first observed cluster"
+      },
+      {
+        "name": "team-b",
+        "description": "Reads only one namespace in the second cluster"
+      }
+    ]
+  },
+  "users": [
+    {
+      "username": "alice",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Alice",
+      "lastName": "A",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "alice-password",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "team-a"
+      ],
+      "email": "alice@example.test"
+    },
+    {
+      "username": "bob",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Bob",
+      "lastName": "B",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "bob-password",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "team-b"
+      ],
+      "email": "bob@example.test"
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "k8s-events-explorer",
+      "name": "Kubernetes Events Explorer",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "team-e2e-client-secret",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": [
+        "http://127.0.0.1:8091/auth/callback"
+      ],
+      "webOrigins": [
+        "http://127.0.0.1:8091"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      }
+    }
+  ]
+}

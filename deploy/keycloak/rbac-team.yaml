@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Lalit Krishna and contributors
+#
+# Grants used by the team-mode browser gate. Alice reads every namespace of the
+# first context; Bob reads one namespace of the second context only.
+roleGrants:
+  team-a:
+    - clusterId: kind-k8s-events
+      namespaces: ["*"]
+  team-b:
+    - clusterId: kind-k8s-events-b
+      namespaces: ["events-e2e-shop"]
+userRoles:
+  alice: [team-a]
+  bob: [team-b]

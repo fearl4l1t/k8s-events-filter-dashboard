@@ -1,0 +1,17 @@
+{{/* SPDX-License-Identifier: Apache-2.0 */}}
+{{- if eq .Values.auth.mode "oidc" }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "k8s-events-explorer.fullname" . }}-rbac
+  labels:
+    {{- include "k8s-events-explorer.labels" . | nindent 4 }}
+data:
+  rbac.yaml: |
+    roleGrants:
+      {{- toYaml .Values.auth.rbac.roleGrants | nindent 6 }}
+    userRoles:
+      {{- toYaml .Values.auth.rbac.userRoles | nindent 6 }}
+    groupRoles:
+      {{- toYaml .Values.auth.rbac.groupRoles | nindent 6 }}
+{{- end }}

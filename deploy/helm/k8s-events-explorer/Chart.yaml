@@ -1,0 +1,8 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Lalit Krishna and contributors
+apiVersion: v2
+name: k8s-events-explorer
+description: Read-only Kubernetes Events explorer
+type: application
+version: 0.2.0
+appVersion: "0.2.0"

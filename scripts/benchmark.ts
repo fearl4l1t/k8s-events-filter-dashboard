@@ -1,169 +1,218 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2026 Lalit Krishna and contributors
 
-import * as fs from 'node:fs';
-import * as path from 'node:path';
-import { normaliseEvent } from '../src/domain/normalise';
-import { filterEvents } from '../src/domain/filters';
-import type { NormalisedEvent, EventFilters } from '../src/domain/types';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { hostname, platform, release } from 'node:os';
+import { performance } from 'node:perf_hooks';
+import {
+  computeOverviewMetrics,
+  exportEventsToCsv,
+  filterEvents,
+  normaliseEvent,
+  sortEvents,
+  DEFAULT_SORT,
+} from '../packages/domain/src/index';
+import type { EventFilters, NormalisedEvent } from '../packages/domain/src/index';
 
-const TARGET_RECORDS = 2500;
-const MAX_ALLOWED_MS = 250;
-const ITERATIONS = 10;
-const WARMUP = 10;
+const RECORD_COUNT = 100_000;
+const SAMPLES = 15;
+const TARGET_P95_MS = 250;
 
-function createDeterministicDataset(count: number): NormalisedEvent[] {
-  const events: NormalisedEvent[] = [];
-  const baseTime = new Date('2026-11-14T00:00:00.000Z').getTime();
-  const namespaces = ['default', 'kube-system', 'monitoring', 'payments', 'database'];
-  const types = ['Normal', 'Warning'] as const;
-  const reasons = ['Scheduled', 'Pulling', 'BackOff', 'FailedScheduling', 'Unhealthy', 'NodeNotReady'];
+const NAMESPACES = ['payments', 'checkout', 'search', 'platform', 'observability', 'batch', 'edge', 'identity'];
+const KINDS = ['Pod', 'Deployment', 'Node', 'ReplicaSet', 'Job', 'StatefulSet'];
+const REASONS = [
+  'Scheduled',
+  'Pulled',
+  'Created',
+  'Started',
+  'BackOff',
+  'Failed',
+  'Unhealthy',
+  'FailedMount',
+  'Evicted',
+  'NodeNotReady',
+  'ScalingReplicaSet',
+  'SuccessfulCreate',
+];
+const BASE_TIME = Date.parse('2026-11-14T12:00:00.000Z');
 
-  for (let i = 0; i < count; i++) {
-    const ns = namespaces[i % namespaces.length] ?? 'default';
-    const type = types[i % types.length] ?? 'Normal';
-    const reason = reasons[i % reasons.length] ?? 'Scheduled';
-    const timestamp = new Date(baseTime + i * 10000).toISOString();
+/** Deterministic 32-bit linear congruential generator; never uses Math.random. */
+function makeRandom(seed: number): () => number {
+  let state = seed >>> 0;
+  return () => {
+    state = (Math.imul(state, 1_664_525) + 1_013_904_223) >>> 0;
+    return state / 0x1_0000_0000;
+  };
+}
 
-    const raw = {
+function makeRawEvent(index: number, next: () => number): unknown {
+  const namespace = NAMESPACES[Math.floor(next() * NAMESPACES.length)] ?? 'payments';
+  const kind = KINDS[Math.floor(next() * KINDS.length)] ?? 'Pod';
+  const reason = REASONS[Math.floor(next() * REASONS.length)] ?? 'Scheduled';
+  const type = index % 3 === 0 ? 'Warning' : 'Normal';
+  const objectName = `${kind.toLowerCase()}-${index % 500}`;
+  const lastObserved = new Date(BASE_TIME - index * 60_000).toISOString();
+  const firstObserved = new Date(BASE_TIME - index * 60_000 - 300_000).toISOString();
+  const count = (index % 12) + 1;
+
+  if (index % 2 === 0) {
+    return {
       apiVersion: 'events.k8s.io/v1',
       kind: 'Event',
       metadata: {
-        name: `bench-event-${i}`,
-        namespace: ns,
-        uid: `bench-uid-${String(i).padStart(5, '0')}`,
-        creationTimestamp: timestamp,
+        uid: `bench-${index}`,
+        namespace,
+        creationTimestamp: firstObserved,
       },
-      regarding: {
-        apiVersion: 'v1',
-        kind: 'Pod',
-        name: `bench-pod-${i % 50}`,
-        namespace: ns,
-        uid: `pod-uid-${i % 50}`,
-      },
+      regarding: { kind, name: objectName, namespace, apiVersion: 'v1' },
       reason,
-      note: `Benchmark event ${i} for simulated cluster testing with message contents`,
+      note: `${reason} for ${kind}/${objectName} in ${namespace}`,
       type,
-      reportingController: 'k8s.io/kubelet',
-      eventTime: timestamp,
-      series: {
-        count: (i % 5) + 1,
-        lastObservedTime: timestamp,
-      },
+      action: 'Benchmark',
+      reportingController: 'kubelet',
+      eventTime: firstObserved,
+      series: { count, lastObservedTime: lastObserved },
     };
-
-    events.push(normaliseEvent(raw, i, 'bench'));
   }
 
-  return events;
+  return {
+    apiVersion: 'v1',
+    kind: 'Event',
+    metadata: {
+      uid: `bench-${index}`,
+      namespace,
+      creationTimestamp: firstObserved,
+    },
+    involvedObject: { kind, name: objectName, namespace, apiVersion: 'v1' },
+    reason,
+    message: `${reason} for ${kind}/${objectName} in ${namespace}`,
+    type,
+    count,
+    source: { component: 'kubelet' },
+    firstTimestamp: firstObserved,
+    lastTimestamp: lastObserved,
+  };
 }
 
-function measure(fn: () => void, name: string): { name: string; median: number; min: number; max: number; passed: boolean } {
-  // Warmup
-  for (let i = 0; i < WARMUP; i++) {
-    fn();
+const CONTEXT = { clusterId: 'benchmark', clusterName: 'benchmark', source: 'local' as const };
+
+function buildRecords(): NormalisedEvent[] {
+  const next = makeRandom(0x5eed_1234);
+  const records: NormalisedEvent[] = [];
+  for (let index = 0; index < RECORD_COUNT; index++) {
+    records.push(normaliseEvent(makeRawEvent(index, next), CONTEXT, index));
   }
-
-  // Measurement
-  const times: number[] = [];
-  for (let i = 0; i < ITERATIONS; i++) {
-    const start = performance.now();
-    fn();
-    const end = performance.now();
-    times.push(end - start);
-  }
-
-  times.sort((a, b) => a - b);
-  const min = times[0] ?? 0;
-  const max = times[times.length - 1] ?? 0;
-  const median = times[Math.floor(times.length / 2)] ?? 0;
-  const passed = median <= MAX_ALLOWED_MS;
-
-  console.log(`[${name}] median: ${median.toFixed(3)} ms (min: ${min.toFixed(3)} ms, max: ${max.toFixed(3)} ms) -> ${passed ? 'PASS' : 'FAIL'}`);
-
-  return { name, median, min, max, passed };
+  return records;
 }
 
-function main(): void {
-  const isReportOnly = process.argv.includes('--report-only');
-  console.log(`Generating deterministic dataset of ${TARGET_RECORDS} records...`);
-  const dataset = createDeterministicDataset(TARGET_RECORDS);
-  const scenarioClock = dataset[dataset.length - 1]?.lastObservedAt ?? null;
-
-  console.log(`Running benchmark on Node ${process.version}...`);
-
-  // Operation 1: Namespace & Type filter
-  const filter1: EventFilters = {
-    namespaces: ['payments'],
-    types: ['Warning'],
-    reasons: [],
-    resourceKind: null,
-    resourceName: '',
-    reporter: null,
-    searchKeyword: '',
-    timeRange: { preset: 'all' },
-  };
-  const op1 = measure(() => {
-    filterEvents(dataset, filter1, scenarioClock);
-  }, 'Namespace & Type Filter');
-
-  // Operation 2: Keyword search
-  const filter2: EventFilters = {
-    namespaces: [],
-    types: [],
-    reasons: [],
-    resourceKind: null,
-    resourceName: '',
-    reporter: null,
-    searchKeyword: 'simulated cluster',
-    timeRange: { preset: 'all' },
-  };
-  const op2 = measure(() => {
-    filterEvents(dataset, filter2, scenarioClock);
-  }, 'Keyword Search');
-
-  // Operation 3: Bounded time-range change (last 1 hour)
-  const filter3: EventFilters = {
-    namespaces: [],
-    types: [],
-    reasons: [],
-    resourceKind: null,
-    resourceName: '',
-    reporter: null,
-    searchKeyword: '',
-    timeRange: { preset: '1h' },
-  };
-  const op3 = measure(() => {
-    filterEvents(dataset, filter3, scenarioClock);
-  }, 'Bounded Time Range (1h)');
-
-  const operations = [op1, op2, op3];
-  const allPassed = operations.every((op) => op.passed);
-
-  const results = {
-    datasetSize: TARGET_RECORDS,
-    nodeVersion: process.version,
-    platform: process.platform,
-    arch: process.arch,
-    timestamp: new Date().toISOString(),
-    targetMs: MAX_ALLOWED_MS,
-    operations,
-    allPassed,
-  };
-
-  const benchDir = path.resolve(process.cwd(), 'bench');
-  if (!fs.existsSync(benchDir)) {
-    fs.mkdirSync(benchDir, { recursive: true });
-  }
-
-  const outputPath = path.join(benchDir, 'results.json');
-  fs.writeFileSync(outputPath, JSON.stringify(results, null, 2), 'utf-8');
-  console.log(`Benchmark results saved to ${outputPath}`);
-
-  if (!allPassed && !isReportOnly) {
-    console.error('Benchmark failed: one or more operations exceeded target of 250 ms.');
-    process.exit(1);
-  }
+function percentile(sorted: number[], fraction: number): number {
+  const position = Math.min(sorted.length - 1, Math.max(0, Math.ceil(sorted.length * fraction) - 1));
+  return sorted[position] ?? 0;
 }
 
-main();
+function measure(operation: () => void): { p50: number; p95: number; max: number } {
+  for (let i = 0; i < 3; i++) operation();
+  const durations: number[] = [];
+  for (let i = 0; i < SAMPLES; i++) {
+    const started = performance.now();
+    operation();
+    durations.push(performance.now() - started);
+  }
+  durations.sort((a, b) => a - b);
+  return {
+    p50: Number(percentile(durations, 0.5).toFixed(2)),
+    p95: Number(percentile(durations, 0.95).toFixed(2)),
+    max: Number((durations[durations.length - 1] ?? 0).toFixed(2)),
+  };
+}
+
+const records = buildRecords();
+const anchorTime = new Date(BASE_TIME).toISOString();
+
+const namespaceAndTypeFilters: EventFilters = {
+  namespaces: ['payments', 'checkout'],
+  types: ['Warning'],
+  reasons: [],
+  resourceKind: null,
+  resourceName: '',
+  reporter: null,
+  searchKeyword: '',
+  timeRange: { preset: 'all', customStart: null, customEnd: null },
+};
+
+const keywordFilters: EventFilters = {
+  ...namespaceAndTypeFilters,
+  namespaces: [],
+  types: [],
+  searchKeyword: 'BackOff',
+};
+
+const timeRangeFilters: EventFilters = {
+  ...namespaceAndTypeFilters,
+  namespaces: [],
+  types: [],
+  timeRange: { preset: '1h', customStart: null, customEnd: null },
+};
+
+const filteredByNamespaceAndType = filterEvents(records, namespaceAndTypeFilters, anchorTime);
+
+const results = {
+  scope: 'domain' as const,
+  datasetSize: RECORD_COUNT,
+  samples: SAMPLES,
+  targetP95Ms: TARGET_P95_MS,
+  machine: hostname(),
+  os: `${platform()} ${release()}`,
+  node: process.version,
+  generatedAt: new Date().toISOString(),
+  operations: {
+    namespaceAndTypeFilter: measure(() => {
+      filterEvents(records, namespaceAndTypeFilters, anchorTime);
+    }),
+    keywordSearch: measure(() => {
+      filterEvents(records, keywordFilters, anchorTime);
+    }),
+    boundedTimeRange: measure(() => {
+      filterEvents(records, timeRangeFilters, anchorTime);
+    }),
+    sort: measure(() => {
+      sortEvents(filteredByNamespaceAndType, DEFAULT_SORT);
+    }),
+    summary: measure(() => {
+      computeOverviewMetrics(
+        filterEvents(records, namespaceAndTypeFilters, anchorTime)
+      );
+    }),
+    exportCsv: measure(() => {
+      exportEventsToCsv(filteredByNamespaceAndType);
+    }),
+  },
+};
+
+const targetOperations = [
+  'namespaceAndTypeFilter',
+  'keywordSearch',
+  'boundedTimeRange',
+  'summary',
+] as const;
+const failures = targetOperations.filter(
+  (name) => results.operations[name].p95 > TARGET_P95_MS
+);
+
+const outputPath = resolve(process.cwd(), 'bench/results.json');
+mkdirSync(dirname(outputPath), { recursive: true });
+writeFileSync(outputPath, `${JSON.stringify({ ...results, passed: failures.length === 0 }, null, 2)}\n`);
+
+console.log('--- Domain benchmark (100,000 deterministic Event records) ---');
+console.log(`${results.machine} | ${results.os} | Node ${results.node}`);
+for (const [name, value] of Object.entries(results.operations)) {
+  console.log(`${name.padEnd(24)} p50 ${String(value.p50).padStart(8)} ms   p95 ${String(value.p95).padStart(8)} ms   max ${String(value.max).padStart(8)} ms`);
+}
+console.log(`\nResults written to ${outputPath}`);
+
+if (failures.length > 0) {
+  console.error(`FAIL: p95 exceeded ${TARGET_P95_MS} ms for: ${failures.join(', ')}`);
+  process.exit(1);
+}
+console.log(`PASS: p95 under ${TARGET_P95_MS} ms for filter, search, time range and summary.`);

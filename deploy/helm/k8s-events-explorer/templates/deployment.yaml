@@ -1,0 +1,109 @@
+{{/* SPDX-License-Identifier: Apache-2.0 */}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "k8s-events-explorer.fullname" . }}
+  labels:
+    {{- include "k8s-events-explorer.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "k8s-events-explorer.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "k8s-events-explorer.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+      annotations:
+        checksum/rbac: {{ include (print $.Template.BasePath "/configmap-rbac.yaml") . | sha256sum }}
+    spec:
+      serviceAccountName: {{ include "k8s-events-explorer.serviceAccountName" . }}
+      automountServiceAccountToken: true
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: server
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: EVENTS_MODE
+              value: in-cluster
+            - name: EVENTS_BIND_HOST
+              value: 0.0.0.0
+            - name: EVENTS_PORT
+              value: "8080"
+            - name: EVENTS_CACHE_MAX_PER_CLUSTER
+              value: {{ .Values.cacheMaxPerCluster | quote }}
+            - name: EVENTS_WATCH_NAMESPACES
+              value: {{ join "," (.Values.watchNamespaces | default (list .Release.Namespace)) | quote }}
+            - name: EVENTS_AUTH_MODE
+              value: {{ .Values.auth.mode | quote }}
+            {{- if eq .Values.auth.mode "oidc" }}
+            - name: EVENTS_PUBLIC_URL
+              value: {{ .Values.auth.publicUrl | quote }}
+            - name: EVENTS_OIDC_ISSUER
+              value: {{ .Values.auth.issuer | quote }}
+            - name: EVENTS_OIDC_CLIENT_ID
+              value: {{ .Values.auth.clientId | quote }}
+            - name: EVENTS_RBAC_FILE
+              value: /etc/events/rbac.yaml
+            - name: EVENTS_OIDC_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.auth.existingSecret }}
+                  key: oidc-client-secret
+            - name: EVENTS_SESSION_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.auth.existingSecret }}
+                  key: {{ .Values.auth.sessionSecretKey }}
+            {{- end }}
+          volumeMounts:
+            {{- if eq .Values.auth.mode "oidc" }}
+            - name: rbac
+              mountPath: /etc/events
+              readOnly: true
+            {{- end }}
+            - name: tmp
+              mountPath: /tmp
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 20
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        {{- if eq .Values.auth.mode "oidc" }}
+        - name: rbac
+          configMap:
+            name: {{ include "k8s-events-explorer.fullname" . }}-rbac
+        {{- end }}
+        - name: tmp
+          emptyDir: {}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

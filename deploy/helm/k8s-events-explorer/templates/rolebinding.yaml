@@ -1,0 +1,20 @@
+{{/* SPDX-License-Identifier: Apache-2.0 */}}
+{{- $namespaces := .Values.watchNamespaces | default (list .Release.Namespace) }}
+{{- range $namespace := $namespaces }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "k8s-events-explorer.fullname" $ }}-reader
+  namespace: {{ $namespace }}
+  labels:
+    {{- include "k8s-events-explorer.labels" $ | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "k8s-events-explorer.fullname" $ }}-reader
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "k8s-events-explorer.serviceAccountName" $ }}
+    namespace: {{ $.Release.Namespace }}
+{{- end }}
