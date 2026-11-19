@@ -22,9 +22,8 @@
 
 <br>
 
-[![Try it live](https://img.shields.io/badge/Try%20it%20live-4f46e5?style=for-the-badge)](https://lalit-contributes.github.io/k8s-events-filter-dashboard/)
 [![Read the spec](https://img.shields.io/badge/Read%20the%20spec-0f766e?style=for-the-badge)](docs/SPEC.md)
-[![Open in GitHub.dev](https://img.shields.io/badge/Open%20in-GitHub.dev-24292f?style=for-the-badge&logo=github)](https://k8s-events-filter-dashboard-kappa.vercel.app/)
+[![Open in Vercel](https://img.shields.io/badge/Open%20in-GitHub.dev-24292f?style=for-the-badge&logo=github)](https://k8s-events-filter-dashboard-kappa.vercel.app/)
 
 
 </div>
